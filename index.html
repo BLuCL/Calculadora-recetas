@@ -1341,16 +1341,19 @@ tfoot td {
         <div class="card-body">
           <div class="form-grid" style="gap:.875rem">
             <div class="form-group">
-              <label class="form-label">Ticket promedio <em>($ por venta)</em></label>
+              <label class="form-label">Venta promedio por cliente <em>($)</em></label>
+              <span class="form-hint">¿Cuánto gasta en promedio un cliente cada vez que compra? Ej: si piden 1 roll a $5.000, ingresa 5000.</span>
               <input type="text" inputmode="numeric" class="form-input" id="eq-ticket" value="5.000" oninput="fmtInput(this);calcEquilibrio()">
             </div>
             <div class="form-group">
-              <label class="form-label">Margen promedio <em>(%)</em></label>
+              <label class="form-label">Ganancia por cada $100 vendidos <em>(%)</em></label>
+              <span class="form-hint">De cada $100 que vendes, ¿cuántos quedan después de pagar los ingredientes? Se calcula automáticamente desde tus recetas.</span>
               <input type="number" class="form-input" id="eq-margen" value="70" min="1" max="100" oninput="calcEquilibrio()">
               <span class="form-hint" id="eq-margen-hint">Calculado automáticamente desde recetas</span>
             </div>
             <div class="form-group">
-              <label class="form-label">Ventas actuales del mes <em>($)</em></label>
+              <label class="form-label">¿Cuánto llevas vendido este mes? <em>($)</em></label>
+              <span class="form-hint">Ingresa el total acumulado de ventas del mes en curso. Deja en 0 si aún no has vendido.</span>
               <input type="text" inputmode="numeric" class="form-input" id="eq-ventas-act" oninput="fmtInput(this);calcEquilibrio()">
             </div>
           </div>
@@ -2509,7 +2512,7 @@ function patchGasto(id, field, value) {
   if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
   const g = gastos.find(g => g.id === id);
   if (!g) return;
-  const parsed = field === 'monto' ? (Number(value) || 0) : value;
+  const parsed = field === 'monto' ? (parseInt(String(value).replace(/[^\d]/g, ''), 10) || 0) : value;
   if (g[field] === parsed) return;   // sin cambios
   g[field] = parsed;
   setGastos(gastos);
@@ -2879,21 +2882,24 @@ function calcEquilibrio() {
   const p    = hint.querySelector('p');
   let cls, msg;
 
+  const clientesDia = ticket > 0 ? Math.ceil((ventasMin / 30) / ticket) : 0;
+  const ventasDia   = clp(ventasMin / 30);
+
   if (actual <= 0) {
     cls = 'info';
-    msg = `Necesitas vender ${clp(ventasMin)} este mes (${Math.ceil(rollsDia)} rolls/día) para cubrir tus gastos fijos.`;
+    msg = `Necesitas vender ${ventasDia} cada día para cubrir tus gastos fijos — eso equivale a atender aproximadamente ${clientesDia} cliente${clientesDia !== 1 ? 's' : ''} diarios a tu ticket promedio de ${clp(ticket)}.`;
   } else if (pctRaw >= 100) {
     cls = 'ok';
-    msg = `🎉 ¡Punto de equilibrio superado! Tienes ${clp(actual - ventasMin)} por encima del mínimo este mes.`;
+    msg = `🎉 ¡Punto de equilibrio superado! Llevas ${clp(actual - ventasMin)} por encima del mínimo este mes. Todo lo que vendas a partir de aquí es ganancia neta.`;
   } else if (pctRaw >= 80) {
     cls = 'ok';
-    msg = `¡Vas muy bien! Te faltan ${clp(ventasMin - actual)} para cubrir todos los gastos este mes.`;
+    msg = `¡Vas muy bien! Te faltan solo ${clp(ventasMin - actual)} para cubrir todos tus gastos. Equivale a vender ${Math.ceil((ventasMin - actual) / ticket)} pedido${Math.ceil((ventasMin - actual) / ticket) !== 1 ? 's' : ''} más a tu ticket promedio.`;
   } else if (pctRaw >= 50) {
     cls = 'warn';
-    msg = `A mitad del camino. Te faltan ${clp(ventasMin - actual)} para alcanzar el punto de equilibrio.`;
+    msg = `Vas a mitad de camino. Te faltan ${clp(ventasMin - actual)} para llegar al punto de equilibrio. Necesitas vender ${ventasDia} diarios el resto del mes.`;
   } else {
     cls = 'danger';
-    msg = `Estás al ${pctRaw.toFixed(0)}% del punto de equilibrio. Necesitas ${clp(ventasMin - actual)} más este mes.`;
+    msg = `Llevas el ${pctRaw.toFixed(0)}% del camino. Necesitas ${clp(ventasMin - actual)} más para cubrir tus gastos — eso son ${Math.ceil((ventasMin - actual) / ticket)} pedido${Math.ceil((ventasMin - actual) / ticket) !== 1 ? 's' : ''} adicionales a tu ticket promedio de ${clp(ticket)}.`;
   }
 
   hint.className = `hint-box ${cls} mt-3`;
