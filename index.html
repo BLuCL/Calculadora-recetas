@@ -996,6 +996,25 @@ tfoot td {
 .font-bold   { font-weight: 700; }
 .font-medium { font-weight: 500; }
 
+/* ============================================================
+   DAY BUTTONS (Configuración)
+============================================================ */
+.day-btn {
+  padding: .5rem 1rem;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--gray-300);
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font);
+  min-width: 52px;
+}
+.day-btn:hover { border-color: var(--red); color: var(--red); }
+.day-btn.active { background: var(--red); border-color: var(--red); color: var(--white); }
+
 </style>
 </head>
 <body>
@@ -1071,6 +1090,10 @@ tfoot td {
       <!-- activity icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Punto de Equilibrio
+    </button>
+    <button class="nav-tab" data-tab="config" onclick="switchTab('config')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Configuración
     </button>
   </nav>
 
@@ -1403,6 +1426,71 @@ tfoot td {
 
   </section>
 
+
+  <!-- ================== TAB: CONFIGURACIÓN ================== -->
+  <section class="tab-section" id="tab-config">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Configuración</h1>
+        <p class="page-subtitle">Horario y días de operación del local</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Días operativos / mes</div>
+        <div class="stat-value" id="cfg-dias-mes">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Horas por día</div>
+        <div class="stat-value sm" id="cfg-horas-dia">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Horas totales / mes</div>
+        <div class="stat-value sm" id="cfg-horas-mes">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Días que abre el local</span></div>
+      <div class="card-body">
+        <p class="text-sm text-muted mb-3">Toca los días para activarlos o desactivarlos</p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="day-btn" data-dia-btn="0">Lun</button>
+          <button class="day-btn" data-dia-btn="1">Mar</button>
+          <button class="day-btn" data-dia-btn="2">Mié</button>
+          <button class="day-btn" data-dia-btn="3">Jue</button>
+          <button class="day-btn" data-dia-btn="4">Vie</button>
+          <button class="day-btn" data-dia-btn="5">Sáb</button>
+          <button class="day-btn" data-dia-btn="6">Dom</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header"><span class="card-title">Horario del local</span></div>
+      <div class="card-body">
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Hora de apertura</label>
+            <input type="time" class="form-input" id="cfg-apertura" value="12:00" onchange="saveConfig()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora de cierre</label>
+            <input type="time" class="form-input" id="cfg-cierre" value="23:00" onchange="saveConfig()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-box info mt-4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>Los días operativos se usan en el <strong>Punto de Equilibrio</strong> para calcular cuánto necesitas vender por día hábil — no por día del mes.</p>
+    </div>
+
+  </section>
+
 </main>
 
 
@@ -1425,6 +1513,10 @@ tfoot td {
   <button class="mobile-tab" data-tab="equilibrio" onclick="switchTab('equilibrio')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     <span class="mobile-tab-label">Equilibrio</span>
+  </button>
+  <button class="mobile-tab" data-tab="config" onclick="switchTab('config')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span class="mobile-tab-label">Config</span>
   </button>
 </nav>
 
@@ -2860,14 +2952,15 @@ function calcEquilibrio() {
     return;
   }
 
+  const diasMes   = getDiasMes();
   const ventasMin = gastos / (margen / 100);
   const rollsMes  = ventasMin / ticket;
-  const rollsDia  = rollsMes / 30;
+  const rollsDia  = rollsMes / diasMes;
   const pctRaw    = actual > 0 ? (actual / ventasMin) * 100 : 0;
   const pctBar    = Math.min(pctRaw, 100);
 
   document.getElementById('eq-ventas-min').textContent = clp(ventasMin);
-  document.getElementById('eq-ventas-dia').textContent = clp(ventasMin / 30);
+  document.getElementById('eq-ventas-dia').textContent = clp(ventasMin / diasMes);
   document.getElementById('eq-rolls-mes').textContent  = Math.ceil(rollsMes).toLocaleString('es-CL');
   document.getElementById('eq-rolls-dia').textContent  = Math.ceil(rollsDia).toLocaleString('es-CL');
   document.getElementById('eq-pct').textContent        = pctRaw.toFixed(1) + '%';
@@ -2882,8 +2975,8 @@ function calcEquilibrio() {
   const p    = hint.querySelector('p');
   let cls, msg;
 
-  const clientesDia = ticket > 0 ? Math.ceil((ventasMin / 30) / ticket) : 0;
-  const ventasDia   = clp(ventasMin / 30);
+  const clientesDia = ticket > 0 ? Math.ceil((ventasMin / diasMes) / ticket) : 0;
+  const ventasDia   = clp(ventasMin / diasMes);
 
   if (actual <= 0) {
     cls = 'info';
@@ -2920,7 +3013,7 @@ function renderScenarios(gastos, ticket, margen) {
     const t  = Math.round(ticket * sc.tMult);
     const m  = Math.max(1, Math.min(99, margen + sc.mDelta));
     const vm = gastos > 0 && t > 0 && m > 0 ? gastos / (m / 100) : 0;
-    const rd = vm > 0 && t > 0 ? Math.ceil(vm / t / 30) : 0;
+    const rd = vm > 0 && t > 0 ? Math.ceil(vm / t / getDiasMes()) : 0;
     const hl = sc.highlight ? 'class="scenario-row-highlight"' : '';
     return `<tr ${hl}>
       <td><strong>${sc.label}</strong></td>
@@ -2955,7 +3048,7 @@ function exportEquilibrio() {
     const t  = Math.round(ticket * sc.tMult);
     const m  = Math.max(1, Math.min(99, margen + sc.mDelta));
     const vm = gastos > 0 && t > 0 && m > 0 ? gastos / (m / 100) : 0;
-    const rd = vm > 0 && t > 0 ? Math.ceil(vm / t / 30) : 0;
+    const rd = vm > 0 && t > 0 ? Math.ceil(vm / t / getDiasMes()) : 0;
     const bg = sc.hl ? 'background:#fef2f2;color:#dc2626;font-weight:600' : '';
     return `<tr style="${bg}">
       <td>${sc.label}</td><td>${clp(t)}</td><td>${m.toFixed(1)}%</td>
@@ -3349,6 +3442,56 @@ function scheduleSync() {
       scheduleSync();
     };
   });
+})();
+
+/* ── MÓDULO CONFIGURACIÓN ───────────────────────────────── */
+const KEY_CONFIG      = 'makyta_config';
+const DEFAULTS_CONFIG = { dias: [0,1,2,3,4], apertura: '12:00', cierre: '23:00' };
+
+function getConfig()  { try { return JSON.parse(localStorage.getItem(KEY_CONFIG)) || null; } catch { return null; } }
+function setConfig(d) { localStorage.setItem(KEY_CONFIG, JSON.stringify(d)); }
+
+function getDiasMes() {
+  const cfg = getConfig() || DEFAULTS_CONFIG;
+  return Math.max(1, Math.round(cfg.dias.length * 4.33));
+}
+
+function saveConfig() {
+  const dias = [];
+  document.querySelectorAll('[data-dia-btn]').forEach(btn => {
+    if (btn.classList.contains('active')) dias.push(Number(btn.dataset.diaBtn));
+  });
+  const apertura = document.getElementById('cfg-apertura').value;
+  const cierre   = document.getElementById('cfg-cierre').value;
+  setConfig({ dias, apertura, cierre });
+  renderConfigStats();
+  if (typeof calcEquilibrio === 'function') calcEquilibrio();
+  showToast('✅ Configuración guardada');
+}
+
+function renderConfigStats() {
+  const cfg     = getConfig() || DEFAULTS_CONFIG;
+  const diasMes = getDiasMes();
+  document.getElementById('cfg-dias-mes').textContent  = diasMes + ' días';
+  const hDia = horasEntre(cfg.apertura, cfg.cierre);
+  document.getElementById('cfg-horas-dia').textContent = hDia.toFixed(1) + ' hrs';
+  document.getElementById('cfg-horas-mes').textContent = Math.round(hDia * diasMes) + ' hrs';
+}
+
+(function initConfig() {
+  if (!getConfig()) setConfig({ ...DEFAULTS_CONFIG });
+  const cfg = getConfig();
+  document.querySelectorAll('[data-dia-btn]').forEach(btn => {
+    const idx = Number(btn.dataset.diaBtn);
+    btn.classList.toggle('active', cfg.dias.includes(idx));
+    btn.addEventListener('click', function() {
+      this.classList.toggle('active');
+      saveConfig();
+    });
+  });
+  document.getElementById('cfg-apertura').value = cfg.apertura;
+  document.getElementById('cfg-cierre').value   = cfg.cierre;
+  renderConfigStats();
 })();
 
 /* ── 3. Protección URL — re-bloquear al abrir el modal ──── */
