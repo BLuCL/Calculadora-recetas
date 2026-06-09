@@ -1342,7 +1342,7 @@ tfoot td {
           <div class="form-grid" style="gap:.875rem">
             <div class="form-group">
               <label class="form-label">Ticket promedio <em>($ por venta)</em></label>
-              <input type="number" class="form-input" id="eq-ticket" value="5000" min="0" oninput="calcEquilibrio()">
+              <input type="text" inputmode="numeric" class="form-input" id="eq-ticket" value="5.000" oninput="fmtInput(this);calcEquilibrio()">
             </div>
             <div class="form-group">
               <label class="form-label">Margen promedio <em>(%)</em></label>
@@ -1351,7 +1351,7 @@ tfoot td {
             </div>
             <div class="form-group">
               <label class="form-label">Ventas actuales del mes <em>($)</em></label>
-              <input type="number" class="form-input" id="eq-ventas-act" value="0" min="0" oninput="calcEquilibrio()">
+              <input type="text" inputmode="numeric" class="form-input" id="eq-ventas-act" oninput="fmtInput(this);calcEquilibrio()">
             </div>
           </div>
         </div>
@@ -1452,7 +1452,7 @@ tfoot td {
         </div>
         <div class="form-group">
           <label class="form-label">Precio de compra <em>($)</em></label>
-          <input type="number" class="form-input" id="insumoPrecio" placeholder="0" min="0" oninput="calcCostoUnitario()">
+          <input type="text" inputmode="numeric" class="form-input" id="insumoPrecio" placeholder="0" oninput="fmtInput(this);calcCostoUnitario()">
         </div>
         <div class="form-group">
           <label class="form-label">Cantidad comprada</label>
@@ -1502,7 +1502,7 @@ tfoot td {
         </div>
         <div class="form-group">
           <label class="form-label">Precio de venta <em>($)</em></label>
-          <input type="number" class="form-input" id="recetaPrecio" placeholder="0" min="0" oninput="calcRecetaLive()">
+          <input type="text" inputmode="numeric" class="form-input" id="recetaPrecio" placeholder="0" oninput="fmtInput(this);calcRecetaLive()">
         </div>
       </div>
 
@@ -1566,7 +1566,7 @@ tfoot td {
         </div>
         <div class="form-group">
           <label class="form-label">Sueldo mensual <em>($)</em></label>
-          <input type="number" class="form-input" id="personalSueldo" placeholder="0" min="0">
+          <input type="text" inputmode="numeric" class="form-input" id="personalSueldo" placeholder="0" oninput="fmtInput(this)">
         </div>
         <div class="form-group">
           <label class="form-label">Hora entrada</label>
@@ -1676,6 +1676,21 @@ function confirmDelete(title, text, onConfirm) {
 function clp(n) {
   if (n == null || isNaN(n)) return '$0';
   return '$' + Math.round(n).toLocaleString('es-CL');
+}
+
+/* ── Formato de moneda en inputs ────────────────────────── */
+function fmtInput(inp) {
+  const raw = inp.value.replace(/[^\d]/g, '');
+  inp.value = raw ? parseInt(raw, 10).toLocaleString('es-CL') : '';
+}
+
+function parseInputVal(id) {
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  return parseInt(String(el.value).replace(/[^\d]/g, ''), 10) || 0;
+}
+
+function fmtVal(n) {
+  return n ? parseInt(n, 10).toLocaleString('es-CL') : '';
 }
 
 /* ── Sync button (stub — connected in Part 6) ───────────── */
@@ -1876,7 +1891,7 @@ function editInsumo(id) {
   document.getElementById('insumoModalTitle').textContent = 'Editar insumo';
   document.getElementById('insumoEditId').value    = id;
   document.getElementById('insumoNombre').value    = ins.nombre;
-  document.getElementById('insumoPrecio').value    = ins.precio;
+  document.getElementById('insumoPrecio').value    = fmtVal(ins.precio);
   document.getElementById('insumoCantidad').value  = ins.cantidad;
   document.getElementById('insumoUnidad').value    = ins.unidad;
   calcCostoUnitario();
@@ -1886,7 +1901,7 @@ function editInsumo(id) {
 
 /* ── Cálculo en vivo (modal) ────────────────────────────── */
 function calcCostoUnitario() {
-  const precio   = parseFloat(document.getElementById('insumoPrecio').value)   || 0;
+  const precio   = parseInputVal('insumoPrecio');
   const cantidad = parseFloat(document.getElementById('insumoCantidad').value) || 0;
   const unidad   = document.getElementById('insumoUnidad').value;
   const cu = cantidad > 0 ? precio / cantidad : 0;
@@ -1896,13 +1911,13 @@ function calcCostoUnitario() {
 /* ── Guardar insumo ─────────────────────────────────────── */
 function saveInsumo() {
   const nombre   = document.getElementById('insumoNombre').value.trim();
-  const precio   = parseFloat(document.getElementById('insumoPrecio').value);
+  const precio   = parseInputVal('insumoPrecio');
   const cantidad = parseFloat(document.getElementById('insumoCantidad').value);
   const unidad   = document.getElementById('insumoUnidad').value;
   const editId   = document.getElementById('insumoEditId').value;
 
   if (!nombre)                       return showToast('⚠️ Ingresa el nombre del insumo', 'error');
-  if (isNaN(precio) || precio < 0)   return showToast('⚠️ Precio inválido', 'error');
+  if (precio < 0)                    return showToast('⚠️ Precio inválido', 'error');
   if (isNaN(cantidad) || cantidad <= 0) return showToast('⚠️ Cantidad inválida', 'error');
 
   let insumos = getInsumos();
@@ -2200,7 +2215,7 @@ function addIngredienteRow(ing) {
 /* ── Cálculo en vivo (modal) ────────────────────────────── */
 function calcRecetaLive() {
   const insumos = getInsumos() || DEFAULTS_INSUMOS;
-  const precio  = parseFloat(document.getElementById('recetaPrecio').value) || 0;
+  const precio  = parseInputVal('recetaPrecio');
   const rows    = document.querySelectorAll('#ingredienteRows [data-ing-row]');
 
   let costo = 0;
@@ -2262,7 +2277,7 @@ function editReceta(id) {
   document.getElementById('recetaModalTitle').textContent = 'Editar receta';
   document.getElementById('recetaEditId').value  = id;
   document.getElementById('recetaNombre').value  = rec.nombre;
-  document.getElementById('recetaPrecio').value  = rec.precio;
+  document.getElementById('recetaPrecio').value  = fmtVal(rec.precio);
   document.getElementById('ingredienteRows').innerHTML = '';
   rec.ingredientes.forEach(ing => addIngredienteRow(ing));
   calcRecetaLive();
@@ -2273,11 +2288,11 @@ function editReceta(id) {
 /* ── Guardar ────────────────────────────────────────────── */
 function saveReceta() {
   const nombre = document.getElementById('recetaNombre').value.trim();
-  const precio = parseFloat(document.getElementById('recetaPrecio').value);
+  const precio = parseInputVal('recetaPrecio');
   const editId = document.getElementById('recetaEditId').value;
 
-  if (!nombre)                      return showToast('⚠️ Ingresa el nombre del roll', 'error');
-  if (isNaN(precio) || precio <= 0) return showToast('⚠️ Precio de venta inválido', 'error');
+  if (!nombre)        return showToast('⚠️ Ingresa el nombre del roll', 'error');
+  if (precio <= 0)    return showToast('⚠️ Precio de venta inválido', 'error');
 
   const rows = document.querySelectorAll('#ingredienteRows [data-ing-row]');
   const ingredientes = [];
@@ -2456,9 +2471,9 @@ function renderGastos() {
           onblur="patchGasto('${g.id}','categoria',this.value)">
       </td>
       <td>
-        <input type="number" class="form-input" style="max-width:160px;font-size:.875rem"
-          value="${g.monto}" min="0"
-          oninput="liveGastosTotal()"
+        <input type="text" inputmode="numeric" class="form-input" style="max-width:160px;font-size:.875rem"
+          value="${g.monto ? parseInt(g.monto).toLocaleString('es-CL') : 0}"
+          oninput="fmtInput(this);liveGastosTotal()"
           onblur="patchGasto('${g.id}','monto',this.value)">
       </td>
       <td>
@@ -2481,8 +2496,8 @@ function renderGastos() {
 /* Suma en vivo mientras se escribe, sin guardar */
 function liveGastosTotal() {
   let total = 0;
-  document.querySelectorAll('#gastosBody input[type="number"]')
-    .forEach(inp => total += Number(inp.value) || 0);
+  document.querySelectorAll('#gastosBody input[inputmode="numeric"]')
+    .forEach(inp => total += parseInputVal(inp));
   document.getElementById('gastosTotal').textContent = clp(total);
   const eq = document.getElementById('eq-gastos');
   if (eq) eq.textContent = clp(total);
@@ -2697,7 +2712,7 @@ function editPersonal(id) {
   document.getElementById('personalEditId').value     = id;
   document.getElementById('personalNombre').value     = emp.nombre;
   document.getElementById('personalDias').value       = emp.dias;
-  document.getElementById('personalSueldo').value     = emp.sueldo;
+  document.getElementById('personalSueldo').value     = fmtVal(emp.sueldo);
   document.getElementById('personalEntrada').value    = emp.entrada;
   document.getElementById('personalSalida').value     = emp.salida;
   document.getElementById('personalBajaInicio').value = emp.bajaInicio;
@@ -2710,7 +2725,7 @@ function editPersonal(id) {
 function savePersonal() {
   const nombre     = document.getElementById('personalNombre').value.trim();
   const dias       = parseInt(document.getElementById('personalDias').value);
-  const sueldo     = parseFloat(document.getElementById('personalSueldo').value);
+  const sueldo     = parseInputVal('personalSueldo');
   const entrada    = document.getElementById('personalEntrada').value;
   const salida     = document.getElementById('personalSalida').value;
   const bajaInicio = document.getElementById('personalBajaInicio').value;
@@ -2719,7 +2734,7 @@ function savePersonal() {
 
   if (!nombre)                          return showToast('⚠️ Ingresa el nombre del empleado', 'error');
   if (isNaN(dias) || dias < 1 || dias > 7) return showToast('⚠️ Días por semana inválido (1–7)', 'error');
-  if (isNaN(sueldo) || sueldo <= 0)     return showToast('⚠️ Ingresa un sueldo válido', 'error');
+  if (sueldo <= 0)                       return showToast('⚠️ Ingresa un sueldo válido', 'error');
   if (horasEntre(entrada, salida) <= 0) return showToast('⚠️ Horario de entrada/salida inválido', 'error');
 
   let personal = getPersonal() || [];
@@ -2826,9 +2841,9 @@ function exportGastos() {
 /* ── Cálculo principal ──────────────────────────────────── */
 function calcEquilibrio() {
   const gastos = getTotalGastos();
-  const ticket = parseFloat(document.getElementById('eq-ticket').value)    || 0;
+  const ticket = parseInputVal('eq-ticket');
   const margen = parseFloat(document.getElementById('eq-margen').value)    || 0;
-  const actual = parseFloat(document.getElementById('eq-ventas-act').value)|| 0;
+  const actual = parseInputVal('eq-ventas-act');
 
   // Siempre actualiza la tarjeta de gastos
   document.getElementById('eq-gastos').textContent = clp(gastos);
@@ -2914,9 +2929,9 @@ function renderScenarios(gastos, ticket, margen) {
 /* ── Reporte PDF ────────────────────────────────────────── */
 function exportEquilibrio() {
   const gastos  = getTotalGastos();
-  const ticket  = parseFloat(document.getElementById('eq-ticket').value)     || 0;
+  const ticket  = parseInputVal('eq-ticket');
   const margen  = parseFloat(document.getElementById('eq-margen').value)     || 0;
-  const actual  = parseFloat(document.getElementById('eq-ventas-act').value) || 0;
+  const actual  = parseInputVal('eq-ventas-act');
   const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
 
   const ventasMin = margen > 0 && ticket > 0 ? gastos / (margen / 100) : 0;
