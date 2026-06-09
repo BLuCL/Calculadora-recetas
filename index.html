@@ -1320,6 +1320,10 @@ tfoot td {
         <div class="stat-value" id="eq-ventas-min">$0</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Ventas mínimas/día</div>
+        <div class="stat-value" id="eq-ventas-dia">$0</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Rolls/mes necesarios</div>
         <div class="stat-value" id="eq-rolls-mes">0</div>
       </div>
@@ -2830,7 +2834,7 @@ function calcEquilibrio() {
   document.getElementById('eq-gastos').textContent = clp(gastos);
 
   if (!gastos || !ticket || !margen) {
-    ['eq-ventas-min','eq-rolls-mes','eq-rolls-dia'].forEach(id =>
+    ['eq-ventas-min','eq-ventas-dia','eq-rolls-mes','eq-rolls-dia'].forEach(id =>
       document.getElementById(id).textContent = id.includes('rolls') ? '0' : '$0');
     document.getElementById('eq-pct').textContent  = '0%';
     document.getElementById('eq-bar').style.width  = '0%';
@@ -2845,6 +2849,7 @@ function calcEquilibrio() {
   const pctBar    = Math.min(pctRaw, 100);
 
   document.getElementById('eq-ventas-min').textContent = clp(ventasMin);
+  document.getElementById('eq-ventas-dia').textContent = clp(ventasMin / 30);
   document.getElementById('eq-rolls-mes').textContent  = Math.ceil(rollsMes).toLocaleString('es-CL');
   document.getElementById('eq-rolls-dia').textContent  = Math.ceil(rollsDia).toLocaleString('es-CL');
   document.getElementById('eq-pct').textContent        = pctRaw.toFixed(1) + '%';
