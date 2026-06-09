@@ -1875,17 +1875,17 @@ function setInsumos(data) {
 
 /* ── Datos precargados ──────────────────────────────────── */
 const DEFAULTS_INSUMOS = [
-  { id:'ins-1',  nombre:'Arroz sushi',  precio:3500,  cantidad:1000, unidad:'g'  },
-  { id:'ins-2',  nombre:'Alga nori',    precio:2800,  cantidad:10,   unidad:'u'  },
-  { id:'ins-3',  nombre:'Salmón',       precio:12000, cantidad:1000, unidad:'g'  },
-  { id:'ins-4',  nombre:'Palta',        precio:3200,  cantidad:1000, unidad:'g'  },
-  { id:'ins-5',  nombre:'Queso crema',  precio:2200,  cantidad:250,  unidad:'g'  },
-  { id:'ins-6',  nombre:'Pepino',       precio:600,   cantidad:1,    unidad:'u'  },
-  { id:'ins-7',  nombre:'Sésamo',       precio:2500,  cantidad:200,  unidad:'g'  },
-  { id:'ins-8',  nombre:'Sriracha',     precio:3000,  cantidad:500,  unidad:'ml' },
-  { id:'ins-9',  nombre:'Mayonesa',     precio:1800,  cantidad:250,  unidad:'ml' },
-  { id:'ins-10', nombre:'Salsa soya',   precio:2200,  cantidad:500,  unidad:'ml' },
-  { id:'ins-11', nombre:'Camarón',      precio:9500,  cantidad:1000, unidad:'g'  },
+  { id:'ins-1',  nombre:'Arroz sushi',  precio:3500,  cantidad:1000, unidad:'g',  categoria:'Cereales'            },
+  { id:'ins-2',  nombre:'Alga nori',    precio:2800,  cantidad:10,   unidad:'u',  categoria:'Cereales'            },
+  { id:'ins-3',  nombre:'Salmón',       precio:12000, cantidad:1000, unidad:'g',  categoria:'Pescados y mariscos' },
+  { id:'ins-4',  nombre:'Palta',        precio:3200,  cantidad:1000, unidad:'g',  categoria:'Verduras'            },
+  { id:'ins-5',  nombre:'Queso crema',  precio:2200,  cantidad:250,  unidad:'g',  categoria:'Lácteos'             },
+  { id:'ins-6',  nombre:'Pepino',       precio:600,   cantidad:1,    unidad:'u',  categoria:'Verduras'            },
+  { id:'ins-7',  nombre:'Sésamo',       precio:2500,  cantidad:200,  unidad:'g',  categoria:'Especias'            },
+  { id:'ins-8',  nombre:'Sriracha',     precio:3000,  cantidad:500,  unidad:'ml', categoria:'Salsas'              },
+  { id:'ins-9',  nombre:'Mayonesa',     precio:1800,  cantidad:250,  unidad:'ml', categoria:'Salsas'              },
+  { id:'ins-10', nombre:'Salsa soya',   precio:2200,  cantidad:500,  unidad:'ml', categoria:'Salsas'              },
+  { id:'ins-11', nombre:'Camarón',      precio:9500,  cantidad:1000, unidad:'g',  categoria:'Pescados y mariscos' },
 ];
 
 /* ── Cálculo costo unitario ─────────────────────────────── */
@@ -1894,24 +1894,27 @@ function costoUnitario(ins) {
 }
 
 /* ── Render tabla ───────────────────────────────────────── */
-let _insumoQuery = '';
+let _insumoQuery    = '';
+let _insumoCategoria = '';
 
 function renderInsumos(query) {
   if (query !== undefined) _insumoQuery = query;
-  const all   = getInsumos() || DEFAULTS_INSUMOS;
-  const q     = _insumoQuery.toLowerCase().trim();
-  const lista = (q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all)
-    .slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const all = getInsumos() || DEFAULTS_INSUMOS;
+  const q   = _insumoQuery.toLowerCase().trim();
+  let lista = (q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all);
+  if (_insumoCategoria) lista = lista.filter(i => (i.categoria || '') === _insumoCategoria);
+  lista = lista.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   const tbody = document.getElementById('insumosBody');
 
   if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5">
+    tbody.innerHTML = `<tr><td colspan="6">
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <div class="empty-title">${q ? 'Sin resultados' : 'Sin insumos'}</div>
-        <div class="empty-text">${q ? 'Prueba otro término de búsqueda.' : 'Agrega tu primer ingrediente.'}</div>
+        <div class="empty-title">${q || _insumoCategoria ? 'Sin resultados' : 'Sin insumos'}</div>
+        <div class="empty-text">${q || _insumoCategoria ? 'Prueba otro término de búsqueda.' : 'Agrega tu primer ingrediente.'}</div>
       </div></td></tr>`;
     updateInsumoStats(all);
+    renderCatFilter();
     return;
   }
 
@@ -1919,6 +1922,7 @@ function renderInsumos(query) {
     const cu = costoUnitario(ins);
     return `<tr>
       <td class="td-main">${esc(ins.nombre)}</td>
+      <td><span class="badge badge-gray">${esc(ins.categoria || 'Sin categoría')}</span></td>
       <td class="td-num">${clp(ins.precio)}</td>
       <td class="td-num">${ins.cantidad.toLocaleString('es-CL')} ${ins.unidad}</td>
       <td class="td-num" style="color:var(--red);font-weight:600">${clp(cu)} / ${ins.unidad}</td>
@@ -1936,6 +1940,21 @@ function renderInsumos(query) {
   }).join('');
 
   updateInsumoStats(all);
+  renderCatFilter();
+}
+
+/* ── Filtro por categoría de insumos ────────────────────── */
+function renderCatFilter() {
+  const container = document.getElementById('insumosCatFilter');
+  if (!container) return;
+  const all  = getInsumos() || DEFAULTS_INSUMOS;
+  const cats = [...new Set(all.map(i => i.categoria || 'Sin categoría'))].sort((a, b) => a.localeCompare(b, 'es'));
+
+  const pills = [{ label:'Todos', value:'' }, ...cats.map(c => ({ label:c, value:c }))];
+  container.innerHTML = pills.map(p => {
+    const active = p.value === _insumoCategoria ? ' active' : '';
+    return `<button class="sub-tab${active}" onclick="_insumoCategoria='${p.value.replace(/'/g,"\\'")}';renderInsumos()">${esc(p.label)}</button>`;
+  }).join('');
 }
 
 /* ── Stats cards ────────────────────────────────────────── */
@@ -1969,12 +1988,13 @@ function filterInsumos(query) {
 /* ── Modal: abrir (nuevo) ───────────────────────────────── */
 function openInsumoModal() {
   document.getElementById('insumoModalTitle').textContent = 'Agregar insumo';
-  document.getElementById('insumoEditId').value    = '';
-  document.getElementById('insumoNombre').value    = '';
-  document.getElementById('insumoPrecio').value    = '';
-  document.getElementById('insumoCantidad').value  = '';
-  document.getElementById('insumoUnidad').value    = 'g';
-  document.getElementById('insumoCostoCalc').value = '';
+  document.getElementById('insumoEditId').value      = '';
+  document.getElementById('insumoCategoria').value   = '';
+  document.getElementById('insumoNombre').value      = '';
+  document.getElementById('insumoPrecio').value      = '';
+  document.getElementById('insumoCantidad').value    = '';
+  document.getElementById('insumoUnidad').value      = 'g';
+  document.getElementById('insumoCostoCalc').value   = '';
   openModal('insumoModal');
   setTimeout(() => document.getElementById('insumoNombre').focus(), 120);
 }
@@ -1985,6 +2005,7 @@ function editInsumo(id) {
   if (!ins) return;
   document.getElementById('insumoModalTitle').textContent = 'Editar insumo';
   document.getElementById('insumoEditId').value    = id;
+  document.getElementById('insumoCategoria').value = ins.categoria || '';
   document.getElementById('insumoNombre').value    = ins.nombre;
   document.getElementById('insumoPrecio').value    = fmtVal(ins.precio);
   document.getElementById('insumoCantidad').value  = ins.cantidad;
