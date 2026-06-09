@@ -1786,7 +1786,8 @@ function renderInsumos(query) {
   if (query !== undefined) _insumoQuery = query;
   const all   = getInsumos() || DEFAULTS_INSUMOS;
   const q     = _insumoQuery.toLowerCase().trim();
-  const lista = q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all;
+  const lista = (q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all)
+    .slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   const tbody = document.getElementById('insumosBody');
 
   if (lista.length === 0) {
@@ -2033,7 +2034,7 @@ function semaforoData(pctCosto) {
 
 /* ── Render cards ───────────────────────────────────────── */
 function renderRecetas() {
-  const all     = getRecetas()  || DEFAULTS_RECETAS;
+  const all     = (getRecetas() || DEFAULTS_RECETAS).slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   const insumos = getInsumos()  || DEFAULTS_INSUMOS;
   const grid    = document.getElementById('recetasGrid');
 
