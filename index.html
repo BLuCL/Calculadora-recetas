@@ -1,0 +1,3356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Panel de control Makyta Sushi — Nancagua, Chile">
+<title>Makyta Sushi — Panel de Control</title>
+<style>
+
+/* ============================================================
+   VARIABLES
+============================================================ */
+:root {
+  --red:        #dc2626;
+  --red-dark:   #b91c1c;
+  --red-light:  #fef2f2;
+  --black:      #111827;
+  --gray-900:   #111827;
+  --gray-800:   #1f2937;
+  --gray-700:   #374151;
+  --gray-600:   #4b5563;
+  --gray-500:   #6b7280;
+  --gray-400:   #9ca3af;
+  --gray-300:   #d1d5db;
+  --gray-200:   #e5e7eb;
+  --gray-100:   #f3f4f6;
+  --gray-50:    #f9fafb;
+  --white:      #ffffff;
+  --green:      #16a34a;
+  --green-light:#f0fdf4;
+  --yellow:     #d97706;
+  --yellow-light:#fffbeb;
+  --blue:       #2563eb;
+  --blue-light: #eff6ff;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
+  --shadow:     0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:  0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg:  0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+
+  --r-sm: 6px;
+  --r:    10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+
+  --nav-h:        62px;
+  --mobile-nav-h: 62px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================================
+   RESET
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-top: var(--nav-h);
+  padding-bottom: var(--mobile-nav-h);
+}
+
+@media (min-width: 768px) {
+  body { padding-bottom: 0; }
+}
+
+/* ============================================================
+   HEADER
+============================================================ */
+.app-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  height: var(--nav-h);
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.app-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--red);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.app-logo-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.2;
+}
+
+.app-logo-sub {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+}
+
+/* ============================================================
+   DESKTOP NAV
+============================================================ */
+.desktop-nav { display: none; }
+
+@media (min-width: 768px) {
+  .desktop-nav {
+    display: flex;
+    gap: 0.125rem;
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: color .15s, background .15s;
+  white-space: nowrap;
+  font-family: var(--font);
+}
+
+.nav-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.nav-tab:hover { color: var(--gray-900); background: var(--gray-100); }
+
+.nav-tab.active { color: var(--red); background: var(--red-light); }
+
+/* ============================================================
+   SYNC BUTTON
+============================================================ */
+.sync-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  border-radius: var(--r-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  transition: background .15s, border-color .15s;
+  font-family: var(--font);
+  flex-shrink: 0;
+}
+
+.sync-btn:hover { background: var(--gray-50); border-color: var(--gray-400); }
+
+.sync-btn svg { width: 14px; height: 14px; }
+
+.sync-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.sync-dot.syncing { background: var(--yellow); animation: pulse 1s infinite; }
+.sync-dot.offline { background: var(--gray-400); }
+.sync-dot.error   { background: var(--red); }
+
+/* ============================================================
+   MOBILE BOTTOM NAV
+============================================================ */
+.mobile-nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: var(--mobile-nav-h);
+  background: var(--white);
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  z-index: 100;
+  padding: 0 0.25rem;
+}
+
+@media (min-width: 768px) { .mobile-nav { display: none; } }
+
+.mobile-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--gray-400);
+  transition: color .15s;
+  padding: 0.5rem 0.25rem;
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+}
+
+.mobile-tab svg { width: 22px; height: 22px; }
+
+.mobile-tab-label { font-size: 0.625rem; font-weight: 500; }
+
+.mobile-tab:hover { color: var(--gray-700); }
+.mobile-tab.active { color: var(--red); }
+
+/* ============================================================
+   MAIN CONTENT
+============================================================ */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+}
+
+@media (min-width: 768px) { .main { padding: 2rem 1.5rem; } }
+
+.tab-section { display: none; }
+.tab-section.active { display: block; }
+
+/* ============================================================
+   PAGE HEADER
+============================================================ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.3;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin-top: 0.125rem;
+}
+
+.page-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ============================================================
+   STAT CARDS
+============================================================ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r);
+  padding: 1rem 1.125rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 0.375rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-value.sm   { font-size: 1.0625rem; }
+.stat-value.red  { color: var(--red); }
+.stat-value.green{ color: var(--green); }
+
+.stat-hint {
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+  margin-top: 0.3rem;
+}
+
+/* ============================================================
+   CARD
+============================================================ */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card + .card, .card + .stats-row { margin-top: 1rem; }
+
+.card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.card-body { padding: 1.25rem; }
+
+/* ============================================================
+   TABLE
+============================================================ */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+thead th {
+  padding: 0.6875rem 1rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+
+tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--gray-50); }
+
+tbody td {
+  padding: 0.8125rem 1rem;
+  color: var(--gray-700);
+  vertical-align: middle;
+}
+
+.td-main  { font-weight: 500; color: var(--gray-900); }
+.td-num   { font-variant-numeric: tabular-nums; font-weight: 500; }
+.td-acts  { display: flex; gap: 0.25rem; align-items: center; }
+
+tfoot td {
+  padding: 0.875rem 1rem;
+  background: var(--gray-50);
+  border-top: 2px solid var(--gray-200);
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5625rem 1rem;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.btn-primary { background: var(--red); color: var(--white); }
+.btn-primary:hover { background: var(--red-dark); }
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+.btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-400); }
+
+.btn-ghost { background: transparent; color: var(--gray-500); padding: 0.375rem 0.5rem; }
+.btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+.btn-ghost.danger:hover { background: var(--red-light); color: var(--red); }
+
+.btn-sm  { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+.btn-sm svg { width: 13px; height: 13px; }
+
+.btn-icon { padding: 0.4375rem; border-radius: var(--r-sm); }
+
+/* ============================================================
+   FORMS
+============================================================ */
+.form-grid { display: grid; gap: 1rem; }
+
+@media (min-width: 480px) {
+  .form-grid-2 { grid-template-columns: 1fr 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.form-group { display: flex; flex-direction: column; gap: 0.375rem; }
+
+.form-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.form-label em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--gray-400);
+}
+
+.form-input,
+.form-select {
+  padding: 0.5625rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-family: var(--font);
+  color: var(--gray-900);
+  background: var(--white);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+  width: 100%;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+}
+
+.form-input::placeholder { color: var(--gray-400); }
+
+.form-input[readonly] {
+  background: var(--gray-50);
+  cursor: default;
+}
+
+.form-hint { font-size: 0.75rem; color: var(--gray-400); }
+
+.input-group { display: flex; }
+.input-group .form-input {
+  border-radius: var(--r-sm) 0 0 var(--r-sm);
+  border-right: none;
+  flex: 1;
+}
+.input-group .form-select {
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  width: auto;
+  min-width: 80px;
+  border-left: none;
+}
+.input-group .form-input:focus { border-right: 1px solid var(--red); z-index: 1; }
+
+/* Ingredient row in recipe modal */
+.ingredient-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 70px auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (max-width: 479px) {
+  .ingredient-row {
+    grid-template-columns: 1fr 80px 70px auto;
+    font-size: 0.8125rem;
+  }
+}
+
+/* ============================================================
+   BADGE
+============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-green  { background: var(--green-light);  color: var(--green);  }
+.badge-yellow { background: var(--yellow-light); color: var(--yellow); }
+.badge-red    { background: var(--red-light);    color: var(--red);    }
+.badge-gray   { background: var(--gray-100);     color: var(--gray-600); }
+
+/* ============================================================
+   SEMAPHORE
+============================================================ */
+.semaphore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.semaphore-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.semaphore.green  { color: var(--green);  }
+.semaphore.green  .semaphore-dot { background: var(--green);  }
+.semaphore.yellow { color: var(--yellow); }
+.semaphore.yellow .semaphore-dot { background: var(--yellow); }
+.semaphore.red    { color: var(--red);    }
+.semaphore.red    .semaphore-dot { background: var(--red);    }
+
+/* ============================================================
+   RECIPE CARDS
+============================================================ */
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.recipe-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s, transform .2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.recipe-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.recipe-card-top {
+  padding: 1rem 1.125rem 0.75rem;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.recipe-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  line-height: 1.3;
+}
+
+.recipe-price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--red);
+  white-space: nowrap;
+}
+
+.recipe-card-mid { padding: 0.875rem 1.125rem; flex: 1; }
+
+.recipe-kpis {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.recipe-kpi { display: flex; flex-direction: column; gap: 0.125rem; }
+
+.recipe-kpi-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--gray-400);
+}
+
+.recipe-kpi-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.recipe-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.recipe-chip {
+  font-size: 0.6875rem;
+  padding: 0.1875rem 0.5rem;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.recipe-card-foot {
+  padding: 0.6875rem 1.125rem;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  gap: 0.375rem;
+  justify-content: flex-end;
+}
+
+/* ============================================================
+   SUGGESTION BOX
+============================================================ */
+.hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--r);
+}
+
+.hint-box svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: .125rem; }
+
+.hint-box p { font-size: 0.8125rem; color: var(--gray-700); line-height: 1.55; }
+
+.hint-box.info    { background: var(--blue-light);   border: 1px solid #bfdbfe; }
+.hint-box.info svg{ color: var(--blue); }
+
+.hint-box.warn    { background: var(--yellow-light); border: 1px solid #fde68a; }
+.hint-box.warn svg{ color: var(--yellow); }
+
+.hint-box.ok      { background: var(--green-light);  border: 1px solid #bbf7d0; }
+.hint-box.ok svg  { color: var(--green); }
+
+.hint-box.danger  { background: var(--red-light);    border: 1px solid #fecaca; }
+.hint-box.danger svg { color: var(--red); }
+
+/* ============================================================
+   PROGRESS BAR
+============================================================ */
+.progress-wrap { margin: 0.75rem 0; }
+
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label { font-size: 0.8125rem; font-weight: 500; color: var(--gray-700); }
+.progress-pct   { font-size: 0.875rem;  font-weight: 700; color: var(--gray-900); }
+
+.progress-bg {
+  height: 10px;
+  background: var(--gray-200);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--red);
+  transition: width .5s ease;
+}
+
+.progress-fill.ok   { background: var(--green); }
+.progress-fill.warn { background: var(--yellow); }
+
+/* ============================================================
+   SUB-TABS
+============================================================ */
+.sub-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--gray-100);
+  border-radius: var(--r-sm);
+  margin-bottom: 1.25rem;
+  width: fit-content;
+}
+
+.sub-tab {
+  padding: 0.4375rem 1rem;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all .15s;
+  font-family: var(--font);
+}
+
+.sub-tab.active {
+  background: var(--white);
+  color: var(--gray-900);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   PERSONAL CARDS
+============================================================ */
+.personal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+.personal-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.personal-card-top {
+  padding: 1rem 1.125rem 0.75rem;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.personal-avatar {
+  width: 38px; height: 38px;
+  background: var(--red-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.personal-name  { font-size: 0.9375rem; font-weight: 600; color: var(--gray-900); }
+.personal-role  { font-size: 0.75rem; color: var(--gray-400); }
+
+.personal-card-body { padding: 0.875rem 1.125rem; }
+
+.personal-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.personal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+}
+
+.personal-row-label { color: var(--gray-500); }
+.personal-row-value { font-weight: 500; color: var(--gray-800); }
+
+.personal-card-foot {
+  padding: 0.6875rem 1.125rem;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+/* ============================================================
+   SCENARIO TABLE
+============================================================ */
+.scenario-row-highlight td {
+  background: var(--red-light) !important;
+  color: var(--red) !important;
+  font-weight: 600;
+}
+
+/* ============================================================
+   EMPTY STATE
+============================================================ */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.empty-state svg {
+  width: 42px; height: 42px;
+  margin: 0 auto 0.875rem;
+  color: var(--gray-300);
+}
+
+.empty-title { font-size: 0.9375rem; font-weight: 600; color: var(--gray-500); margin-bottom: 0.25rem; }
+.empty-text  { font-size: 0.8125rem; color: var(--gray-400); }
+
+/* ============================================================
+   DIVIDER
+============================================================ */
+.divider { height: 1px; background: var(--gray-200); margin: 1.125rem 0; }
+
+/* ============================================================
+   MODAL
+============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  transform: scale(.96) translateY(6px);
+  transition: transform .2s;
+}
+
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+.modal-lg { max-width: 640px; }
+
+.modal-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 1;
+}
+
+.modal-title { font-size: 1.0625rem; font-weight: 600; color: var(--gray-900); }
+
+.modal-body { padding: 1.25rem 1.5rem; }
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  background: var(--white);
+}
+
+/* ============================================================
+   CONFIRM MODAL
+============================================================ */
+.confirm-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--r);
+  background: var(--red-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.confirm-icon svg { width: 22px; height: 22px; color: var(--red); }
+
+.confirm-title { font-size: 1rem; font-weight: 600; color: var(--gray-900); margin-bottom: 0.375rem; }
+.confirm-text  { font-size: 0.875rem; color: var(--gray-500); line-height: 1.6; }
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast-container {
+  position: fixed;
+  bottom: calc(var(--mobile-nav-h) + 1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .toast-container {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    left: auto;
+    transform: none;
+    align-items: flex-end;
+  }
+}
+
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6875rem 1.125rem;
+  background: var(--gray-900);
+  color: var(--white);
+  border-radius: var(--r);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn .25s ease, toastOut .25s ease 2.5s forwards;
+  white-space: nowrap;
+  font-family: var(--font);
+}
+
+.toast.success { background: #14532d; }
+.toast.error   { background: #7f1d1d; }
+.toast.info    { background: #1e3a5f; }
+
+/* ============================================================
+   ANIMATIONS
+============================================================ */
+@keyframes toastIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-6px); } }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
+@keyframes spin     { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+.spin { animation: spin 1s linear infinite; }
+
+/* ============================================================
+   UTILITIES
+============================================================ */
+.flex  { display: flex; }
+.grid  { display: grid; }
+.hidden { display: none !important; }
+.items-center  { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.mt-3  { margin-top: 0.75rem; }
+.mt-4  { margin-top: 1rem; }
+.mb-3  { margin-bottom: 0.75rem; }
+.mb-4  { margin-bottom: 1rem; }
+.w-full { width: 100%; }
+.text-sm  { font-size: 0.875rem; }
+.text-xs  { font-size: 0.75rem; }
+.text-muted  { color: var(--gray-500); }
+.text-red    { color: var(--red); }
+.text-green  { color: var(--green); }
+.font-bold   { font-weight: 700; }
+.font-medium { font-weight: 500; }
+
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     PANTALLA DE CONTRASEÑA
+======================================================== -->
+<div id="lockScreen" style="position:fixed;inset:0;background:#111827;z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:24px;padding:2.5rem 2rem;text-align:center;
+    width:100%;max-width:300px;box-shadow:0 25px 50px rgba(0,0,0,.5)">
+    <div style="width:64px;height:64px;background:#dc2626;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;font-size:2rem;
+      margin:0 auto 1rem">🍣</div>
+    <div style="font-size:1.25rem;font-weight:700;color:#111827;margin-bottom:.25rem">
+      Makyta Sushi</div>
+    <div style="font-size:.875rem;color:#6b7280;margin-bottom:1.75rem">
+      Panel de Control</div>
+    <input
+      type="password"
+      id="pinInput"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+      autocomplete="off"
+      oninput="checkPin(this)"
+      style="width:100%;padding:.75rem;border:2px solid #e5e7eb;border-radius:10px;
+        font-size:1.75rem;text-align:center;letter-spacing:.75rem;outline:none;
+        transition:border-color .15s,background .15s;font-family:monospace"
+      onfocus="this.style.borderColor='#dc2626'"
+      onblur="this.style.borderColor='#e5e7eb'"
+    >
+    <div id="pinError" style="min-height:1.25rem;margin-top:.625rem;
+      font-size:.8125rem;color:#dc2626;font-weight:500"></div>
+  </div>
+</div>
+<script>
+  /* Ocultar pantalla inmediatamente si ya está autenticado en esta sesión */
+  if (sessionStorage.getItem('makyta_auth') === '1') {
+    document.getElementById('lockScreen').style.display = 'none';
+  }
+</script>
+
+<!-- ========================================================
+     HEADER
+======================================================== -->
+<header class="app-header">
+  <div class="app-logo">
+    <div class="app-logo-icon">🍣</div>
+    <div>
+      <div class="app-logo-name">Makyta Sushi</div>
+      <div class="app-logo-sub">Nancagua · Panel de Control</div>
+    </div>
+  </div>
+
+  <nav class="desktop-nav" aria-label="Navegación principal">
+    <button class="nav-tab active" data-tab="insumos" onclick="switchTab('insumos')">
+      <!-- clipboard icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Insumos
+    </button>
+    <button class="nav-tab" data-tab="recetas" onclick="switchTab('recetas')">
+      <!-- chef hat icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 0111.18 0A4 4 0 0118 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+      Recetas
+    </button>
+    <button class="nav-tab" data-tab="gastos" onclick="switchTab('gastos')">
+      <!-- building icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      Gastos y Personal
+    </button>
+    <button class="nav-tab" data-tab="equilibrio" onclick="switchTab('equilibrio')">
+      <!-- activity icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Punto de Equilibrio
+    </button>
+  </nav>
+
+  <button class="sync-btn" id="syncBtn" onclick="syncData()" title="Sincronizar con Google Sheets">
+    <div class="sync-dot" id="syncDot"></div>
+    <svg id="syncIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+    <span id="syncLabel">Sincronizar</span>
+  </button>
+</header>
+
+
+<!-- ========================================================
+     MAIN
+======================================================== -->
+<main class="main">
+
+  <!-- ================== TAB: INSUMOS ================== -->
+  <section class="tab-section active" id="tab-insumos">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Insumos</h1>
+        <p class="page-subtitle">Ingredientes y costo por unidad</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="exportInsumos()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+        <button class="btn btn-primary" onclick="openInsumoModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar insumo
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total insumos</div>
+        <div class="stat-value" id="st-total-insumos">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Más caro / kg-L</div>
+        <div class="stat-value sm red" id="st-insumo-caro">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Más económico</div>
+        <div class="stat-value sm green" id="st-insumo-barato">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Última edición</div>
+        <div class="stat-value sm" id="st-insumos-fecha">—</div>
+        <div class="stat-hint" id="st-insumos-hora"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Lista de ingredientes</span>
+        <div style="position:relative;width:220px">
+          <svg style="position:absolute;left:.625rem;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--gray-400);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="form-input" style="padding-left:2.125rem" placeholder="Buscar…" oninput="filterInsumos(this.value)" id="insumoSearch">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Precio compra</th>
+              <th>Cantidad</th>
+              <th>Costo / unidad</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="insumosBody">
+            <!-- filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ================== TAB: RECETAS ================== -->
+  <section class="tab-section" id="tab-recetas">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Recetas</h1>
+        <p class="page-subtitle">Costo y rentabilidad de cada roll</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="exportRecetas()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Reporte PDF
+        </button>
+        <button class="btn btn-primary" onclick="openRecetaModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva receta
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total recetas</div>
+        <div class="stat-value" id="st-total-recetas">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Margen promedio</div>
+        <div class="stat-value green" id="st-margen-prom">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Más rentable</div>
+        <div class="stat-value sm green" id="st-roll-rentable">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mayor costo</div>
+        <div class="stat-value sm red" id="st-roll-caro">—</div>
+      </div>
+    </div>
+
+    <div class="recipe-grid" id="recetasGrid">
+      <!-- filled by JS -->
+    </div>
+
+  </section>
+
+
+  <!-- ================== TAB: GASTOS Y PERSONAL ================== -->
+  <section class="tab-section" id="tab-gastos">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Gastos y Personal</h1>
+        <p class="page-subtitle">Costos fijos mensuales y análisis de turnos</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="exportGastos()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Reporte PDF
+      </button>
+    </div>
+
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSubTab('gastos-fijos')">Gastos Fijos</button>
+      <button class="sub-tab"       onclick="switchSubTab('personal')">Personal</button>
+    </div>
+
+    <!-- Gastos Fijos -->
+    <div id="subtab-gastos-fijos">
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total gastos/mes</div>
+          <div class="stat-value red" id="st-total-gastos">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Mayor gasto</div>
+          <div class="stat-value sm" id="st-mayor-gasto">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Gasto diario equiv.</div>
+          <div class="stat-value sm" id="st-gasto-diario">$0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Gastos fijos mensuales</span>
+          <button class="btn btn-primary btn-sm" onclick="addGastoRow()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar fila
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Monto mensual ($)</th>
+                <th>Notas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="gastosBody"></tbody>
+            <tfoot>
+              <tr>
+                <td style="font-weight:700;color:var(--gray-900)">Total mensual</td>
+                <td style="font-weight:700;color:var(--red);font-size:1.0625rem" id="gastosTotal">$0</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal -->
+    <div id="subtab-personal" class="hidden">
+
+      <div class="page-header" style="margin-bottom:1rem">
+        <div></div>
+        <button class="btn btn-primary btn-sm" onclick="openPersonalModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar empleado
+        </button>
+      </div>
+
+      <div class="personal-grid" id="personalGrid"></div>
+
+      <div class="card mt-4" id="analisisCard">
+        <div class="card-header"><span class="card-title">Análisis horas muertas</span></div>
+        <div class="card-body" id="analisisBody">
+          <p class="text-sm text-muted">Agrega empleados con horario de baja afluencia para ver el análisis.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================== TAB: PUNTO DE EQUILIBRIO ================== -->
+  <section class="tab-section" id="tab-equilibrio">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Punto de Equilibrio</h1>
+        <p class="page-subtitle">¿Cuánto necesitas vender para no perder dinero?</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="exportEquilibrio()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Reporte PDF
+      </button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Gastos fijos/mes</div>
+        <div class="stat-value red" id="eq-gastos">$0</div>
+        <div class="stat-hint">desde Módulo 2</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ventas mínimas/mes</div>
+        <div class="stat-value" id="eq-ventas-min">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rolls/mes necesarios</div>
+        <div class="stat-value" id="eq-rolls-mes">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rolls/día necesarios</div>
+        <div class="stat-value red" id="eq-rolls-dia">0</div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));margin-bottom:1rem">
+
+      <!-- Variables -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Variables</span></div>
+        <div class="card-body">
+          <div class="form-grid" style="gap:.875rem">
+            <div class="form-group">
+              <label class="form-label">Ticket promedio <em>($ por venta)</em></label>
+              <input type="number" class="form-input" id="eq-ticket" value="5000" min="0" oninput="calcEquilibrio()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Margen promedio <em>(%)</em></label>
+              <input type="number" class="form-input" id="eq-margen" value="70" min="1" max="100" oninput="calcEquilibrio()">
+              <span class="form-hint" id="eq-margen-hint">Calculado automáticamente desde recetas</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ventas actuales del mes <em>($)</em></label>
+              <input type="number" class="form-input" id="eq-ventas-act" value="0" min="0" oninput="calcEquilibrio()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progreso -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Progreso del mes</span></div>
+        <div class="card-body">
+          <div class="progress-wrap">
+            <div class="progress-head">
+              <span class="progress-label">Hacia el punto de equilibrio</span>
+              <span class="progress-pct" id="eq-pct">0%</span>
+            </div>
+            <div class="progress-bg">
+              <div class="progress-fill" id="eq-bar" style="width:0%"></div>
+            </div>
+          </div>
+          <div id="eq-hint" class="hint-box info mt-3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Ingresa tus datos para ver la proyección del mes.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Escenarios -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Escenarios comparativos</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Escenario</th>
+              <th>Ticket promedio</th>
+              <th>Margen</th>
+              <th>Ventas mínimas/mes</th>
+              <th>Rolls/día necesarios</th>
+            </tr>
+          </thead>
+          <tbody id="scenariosBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- ========================================================
+     MOBILE BOTTOM NAV
+======================================================== -->
+<nav class="mobile-nav" aria-label="Navegación móvil">
+  <button class="mobile-tab active" data-tab="insumos" onclick="switchTab('insumos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <span class="mobile-tab-label">Insumos</span>
+  </button>
+  <button class="mobile-tab" data-tab="recetas" onclick="switchTab('recetas')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 0111.18 0A4 4 0 0118 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+    <span class="mobile-tab-label">Recetas</span>
+  </button>
+  <button class="mobile-tab" data-tab="gastos" onclick="switchTab('gastos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+    <span class="mobile-tab-label">Gastos</span>
+  </button>
+  <button class="mobile-tab" data-tab="equilibrio" onclick="switchTab('equilibrio')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span class="mobile-tab-label">Equilibrio</span>
+  </button>
+</nav>
+
+
+<!-- ========================================================
+     TOAST CONTAINER
+======================================================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<!-- ========================================================
+     MODAL: INSUMO
+======================================================== -->
+<div class="modal-overlay" id="insumoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="insumoModalTitle">Agregar insumo</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('insumoModal')" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="insumoEditId">
+      <div class="form-grid form-grid-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Nombre del insumo</label>
+          <input type="text" class="form-input" id="insumoNombre" placeholder="Ej: Salmón fresco">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio de compra <em>($)</em></label>
+          <input type="number" class="form-input" id="insumoPrecio" placeholder="0" min="0" oninput="calcCostoUnitario()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad comprada</label>
+          <div class="input-group">
+            <input type="number" class="form-input" id="insumoCantidad" placeholder="0" min="0" oninput="calcCostoUnitario()">
+            <select class="form-select" id="insumoUnidad">
+              <option value="g">g</option>
+              <option value="kg">kg</option>
+              <option value="ml">ml</option>
+              <option value="L">L</option>
+              <option value="u">u</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Costo calculado por unidad</label>
+          <input type="text" class="form-input" id="insumoCostoCalc" readonly placeholder="—">
+          <span class="form-hint">precio_compra ÷ cantidad_comprada</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('insumoModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInsumo()">Guardar insumo</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================================
+     MODAL: RECETA
+======================================================== -->
+<div class="modal-overlay" id="recetaModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="recetaModalTitle">Nueva receta</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('recetaModal')" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="recetaEditId">
+      <div class="form-grid form-grid-2" style="margin-bottom:1.25rem">
+        <div class="form-group">
+          <label class="form-label">Nombre del roll</label>
+          <input type="text" class="form-input" id="recetaNombre" placeholder="Ej: Roll Volcán">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio de venta <em>($)</em></label>
+          <input type="number" class="form-input" id="recetaPrecio" placeholder="0" min="0" oninput="calcRecetaLive()">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-3">
+        <span class="form-label" style="margin:0">Ingredientes</span>
+        <button class="btn btn-secondary btn-sm" onclick="addIngredienteRow()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar
+        </button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem" id="ingredienteRows"></div>
+
+      <div class="divider"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="text-xs text-muted" style="margin-bottom:.25rem">Costo del roll</div>
+          <div style="font-size:1.375rem;font-weight:700;color:var(--gray-900)" id="recetaCostoTotal">$0</div>
+        </div>
+        <div>
+          <div class="text-xs text-muted" style="margin-bottom:.25rem">% sobre precio de venta</div>
+          <div style="font-size:1.125rem;font-weight:700" id="recetaSemaforo">—</div>
+        </div>
+      </div>
+
+      <div id="recetaHint" class="hint-box info mt-3 hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p id="recetaHintText"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('recetaModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveReceta()">Guardar receta</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================================
+     MODAL: PERSONAL
+======================================================== -->
+<div class="modal-overlay" id="personalModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="personalModalTitle">Agregar empleado</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('personalModal')" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="personalEditId">
+      <div class="form-grid form-grid-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Nombre del empleado</label>
+          <input type="text" class="form-input" id="personalNombre" placeholder="Ej: María González">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Días por semana</label>
+          <input type="number" class="form-input" id="personalDias" placeholder="5" min="1" max="7">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sueldo mensual <em>($)</em></label>
+          <input type="number" class="form-input" id="personalSueldo" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora entrada</label>
+          <input type="time" class="form-input" id="personalEntrada" value="09:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora salida</label>
+          <input type="time" class="form-input" id="personalSalida" value="18:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Inicio baja afluencia</label>
+          <input type="time" class="form-input" id="personalBajaInicio" value="15:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fin baja afluencia</label>
+          <input type="time" class="form-input" id="personalBajaFin" value="17:00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('personalModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePersonal()">Guardar empleado</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================================
+     MODAL: CONFIRMAR ELIMINACIÓN
+======================================================== -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="padding:1.5rem">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </div>
+      <div class="confirm-title" id="confirmTitle">¿Eliminar registro?</div>
+      <p class="confirm-text" id="confirmText">Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancelar</button>
+      <button class="btn btn-primary" id="confirmOk">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================================
+     SCRIPT: NAVIGATION + UTILITIES (stub functions filled in Part 2+)
+======================================================== -->
+<script>
+
+/* ── Tab navigation ─────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+/* ── Sub-tab (Gastos / Personal) ────────────────────────── */
+function switchSubTab(sub) {
+  const subs = ['gastos-fijos', 'personal'];
+  subs.forEach(s => document.getElementById('subtab-' + s).classList.toggle('hidden', s !== sub));
+  document.querySelectorAll('.sub-tab').forEach((b, i) => b.classList.toggle('active', subs[i] === sub));
+}
+
+/* ── Modal helpers ──────────────────────────────────────── */
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+});
+
+/* ── Toast ──────────────────────────────────────────────── */
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 2900);
+}
+
+/* ── Confirm delete dialog ──────────────────────────────── */
+function confirmDelete(title, text, onConfirm) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent  = text;
+  const btn = document.getElementById('confirmOk');
+  btn.onclick = () => { onConfirm(); closeModal('confirmModal'); };
+  openModal('confirmModal');
+}
+
+/* ── Chilean number format ──────────────────────────────── */
+function clp(n) {
+  if (n == null || isNaN(n)) return '$0';
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+
+/* ── Sync button (stub — connected in Part 6) ───────────── */
+function syncData() {
+  const icon = document.getElementById('syncIcon');
+  const dot  = document.getElementById('syncDot');
+  const lbl  = document.getElementById('syncLabel');
+  icon.classList.add('spin');
+  dot.className  = 'sync-dot syncing';
+  lbl.textContent = 'Sincronizando…';
+  setTimeout(() => {
+    icon.classList.remove('spin');
+    dot.className  = 'sync-dot';
+    lbl.textContent = 'Sincronizar';
+    showToast('✅ Sincronizado con Google Sheets');
+  }, 1500);
+}
+
+/* ── Stub functions filled in Part 2–5 ─────────────────── */
+function openInsumoModal()  { openModal('insumoModal');  }
+function openRecetaModal()  { openModal('recetaModal');  }
+function openPersonalModal(){ openModal('personalModal');}
+function calcCostoUnitario(){}
+function calcRecetaLive()   {}
+function addIngredienteRow(){}
+function saveInsumo()       {}
+function saveReceta()       {}
+function savePersonal()     {}
+function filterInsumos()    {}
+function addGastoRow()      {}
+function calcEquilibrio()   {}
+function exportInsumos()    { showToast('⏳ Disponible en la Parte 5', 'info'); }
+function exportRecetas()    { showToast('⏳ Disponible en la Parte 5', 'info'); }
+function exportGastos()     { showToast('⏳ Disponible en la Parte 5', 'info'); }
+function exportEquilibrio() { showToast('⏳ Disponible en la Parte 5', 'info'); }
+
+</script>
+
+<!-- ========================================================
+     PART 2 — MÓDULO INSUMOS
+     localStorage key: makyta_insumos
+     (En Part 6 se conecta a Google Sheets)
+======================================================== -->
+<script>
+
+/* ── Utilidades globales ────────────────────────────────── */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('es-CL', { day:'2-digit', month:'short' });
+}
+
+function fmtTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+}
+
+function downloadCSV(filename, rows) {
+  const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href:url, download:filename });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Storage ────────────────────────────────────────────── */
+const KEY_INSUMOS = 'makyta_insumos';
+
+function getInsumos() {
+  try { return JSON.parse(localStorage.getItem(KEY_INSUMOS)) || null; }
+  catch { return null; }
+}
+
+function setInsumos(data) {
+  localStorage.setItem(KEY_INSUMOS, JSON.stringify(data));
+}
+
+/* ── Datos precargados ──────────────────────────────────── */
+const DEFAULTS_INSUMOS = [
+  { id:'ins-1',  nombre:'Arroz sushi',  precio:3500,  cantidad:1000, unidad:'g'  },
+  { id:'ins-2',  nombre:'Alga nori',    precio:2800,  cantidad:10,   unidad:'u'  },
+  { id:'ins-3',  nombre:'Salmón',       precio:12000, cantidad:1000, unidad:'g'  },
+  { id:'ins-4',  nombre:'Palta',        precio:3200,  cantidad:1000, unidad:'g'  },
+  { id:'ins-5',  nombre:'Queso crema',  precio:2200,  cantidad:250,  unidad:'g'  },
+  { id:'ins-6',  nombre:'Pepino',       precio:600,   cantidad:1,    unidad:'u'  },
+  { id:'ins-7',  nombre:'Sésamo',       precio:2500,  cantidad:200,  unidad:'g'  },
+  { id:'ins-8',  nombre:'Sriracha',     precio:3000,  cantidad:500,  unidad:'ml' },
+  { id:'ins-9',  nombre:'Mayonesa',     precio:1800,  cantidad:250,  unidad:'ml' },
+  { id:'ins-10', nombre:'Salsa soya',   precio:2200,  cantidad:500,  unidad:'ml' },
+  { id:'ins-11', nombre:'Camarón',      precio:9500,  cantidad:1000, unidad:'g'  },
+];
+
+/* ── Cálculo costo unitario ─────────────────────────────── */
+function costoUnitario(ins) {
+  return ins.cantidad > 0 ? ins.precio / ins.cantidad : 0;
+}
+
+/* ── Render tabla ───────────────────────────────────────── */
+let _insumoQuery = '';
+
+function renderInsumos(query) {
+  if (query !== undefined) _insumoQuery = query;
+  const all   = getInsumos() || DEFAULTS_INSUMOS;
+  const q     = _insumoQuery.toLowerCase().trim();
+  const lista = q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all;
+  const tbody = document.getElementById('insumosBody');
+
+  if (lista.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <div class="empty-title">${q ? 'Sin resultados' : 'Sin insumos'}</div>
+        <div class="empty-text">${q ? 'Prueba otro término de búsqueda.' : 'Agrega tu primer ingrediente.'}</div>
+      </div></td></tr>`;
+    updateInsumoStats(all);
+    return;
+  }
+
+  tbody.innerHTML = lista.map(ins => {
+    const cu = costoUnitario(ins);
+    return `<tr>
+      <td class="td-main">${esc(ins.nombre)}</td>
+      <td class="td-num">${clp(ins.precio)}</td>
+      <td class="td-num">${ins.cantidad.toLocaleString('es-CL')} ${ins.unidad}</td>
+      <td class="td-num" style="color:var(--red);font-weight:600">${clp(cu)} / ${ins.unidad}</td>
+      <td>
+        <div class="td-acts">
+          <button class="btn btn-ghost btn-icon" onclick="editInsumo('${ins.id}')" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-icon danger" onclick="deleteInsumo('${ins.id}')" title="Eliminar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateInsumoStats(all);
+}
+
+/* ── Stats cards ────────────────────────────────────────── */
+function updateInsumoStats(list) {
+  list = list || getInsumos() || [];
+  document.getElementById('st-total-insumos').textContent = list.length;
+
+  if (!list.length) {
+    document.getElementById('st-insumo-caro').textContent   = '—';
+    document.getElementById('st-insumo-barato').textContent = '—';
+    return;
+  }
+
+  const sorted = [...list].sort((a,b) => costoUnitario(b) - costoUnitario(a));
+  document.getElementById('st-insumo-caro').textContent   = sorted[0].nombre;
+  document.getElementById('st-insumo-barato').textContent = sorted[sorted.length - 1].nombre;
+
+  const withDate = list.filter(i => i.updatedAt);
+  if (withDate.length) {
+    const last = withDate.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
+    document.getElementById('st-insumos-fecha').textContent = fmtDate(last.updatedAt);
+    document.getElementById('st-insumos-hora').textContent  = fmtTime(last.updatedAt);
+  }
+}
+
+/* ── Filter (override stub) ─────────────────────────────── */
+function filterInsumos(query) {
+  renderInsumos(query);
+}
+
+/* ── Modal: abrir (nuevo) ───────────────────────────────── */
+function openInsumoModal() {
+  document.getElementById('insumoModalTitle').textContent = 'Agregar insumo';
+  document.getElementById('insumoEditId').value    = '';
+  document.getElementById('insumoNombre').value    = '';
+  document.getElementById('insumoPrecio').value    = '';
+  document.getElementById('insumoCantidad').value  = '';
+  document.getElementById('insumoUnidad').value    = 'g';
+  document.getElementById('insumoCostoCalc').value = '';
+  openModal('insumoModal');
+  setTimeout(() => document.getElementById('insumoNombre').focus(), 120);
+}
+
+/* ── Modal: abrir (editar) ──────────────────────────────── */
+function editInsumo(id) {
+  const ins = (getInsumos() || DEFAULTS_INSUMOS).find(i => i.id === id);
+  if (!ins) return;
+  document.getElementById('insumoModalTitle').textContent = 'Editar insumo';
+  document.getElementById('insumoEditId').value    = id;
+  document.getElementById('insumoNombre').value    = ins.nombre;
+  document.getElementById('insumoPrecio').value    = ins.precio;
+  document.getElementById('insumoCantidad').value  = ins.cantidad;
+  document.getElementById('insumoUnidad').value    = ins.unidad;
+  calcCostoUnitario();
+  openModal('insumoModal');
+  setTimeout(() => document.getElementById('insumoNombre').focus(), 120);
+}
+
+/* ── Cálculo en vivo (modal) ────────────────────────────── */
+function calcCostoUnitario() {
+  const precio   = parseFloat(document.getElementById('insumoPrecio').value)   || 0;
+  const cantidad = parseFloat(document.getElementById('insumoCantidad').value) || 0;
+  const unidad   = document.getElementById('insumoUnidad').value;
+  const cu = cantidad > 0 ? precio / cantidad : 0;
+  document.getElementById('insumoCostoCalc').value = cu > 0 ? `${clp(cu)} / ${unidad}` : '';
+}
+
+/* ── Guardar insumo ─────────────────────────────────────── */
+function saveInsumo() {
+  const nombre   = document.getElementById('insumoNombre').value.trim();
+  const precio   = parseFloat(document.getElementById('insumoPrecio').value);
+  const cantidad = parseFloat(document.getElementById('insumoCantidad').value);
+  const unidad   = document.getElementById('insumoUnidad').value;
+  const editId   = document.getElementById('insumoEditId').value;
+
+  if (!nombre)                       return showToast('⚠️ Ingresa el nombre del insumo', 'error');
+  if (isNaN(precio) || precio < 0)   return showToast('⚠️ Precio inválido', 'error');
+  if (isNaN(cantidad) || cantidad <= 0) return showToast('⚠️ Cantidad inválida', 'error');
+
+  let insumos = getInsumos();
+  if (!insumos) insumos = DEFAULTS_INSUMOS.map(i => ({ ...i }));
+
+  const now = new Date().toISOString();
+
+  if (editId) {
+    const idx = insumos.findIndex(i => i.id === editId);
+    if (idx >= 0) insumos[idx] = { ...insumos[idx], nombre, precio, cantidad, unidad, updatedAt: now };
+  } else {
+    insumos.push({ id: uid(), nombre, precio, cantidad, unidad, updatedAt: now });
+  }
+
+  setInsumos(insumos);
+  closeModal('insumoModal');
+  renderInsumos();
+  showToast('✅ Insumo guardado');
+
+  // Notifica al módulo de recetas para recalcular costos
+  if (typeof renderRecetas === 'function') renderRecetas();
+}
+
+/* ── Eliminar insumo ────────────────────────────────────── */
+function deleteInsumo(id) {
+  const ins = (getInsumos() || DEFAULTS_INSUMOS).find(i => i.id === id);
+  if (!ins) return;
+  confirmDelete(
+    `¿Eliminar "${ins.nombre}"?`,
+    'Las recetas que lo usen mostrarán ese ingrediente como no encontrado.',
+    () => {
+      const updated = (getInsumos() || []).filter(i => i.id !== id);
+      setInsumos(updated);
+      renderInsumos();
+      if (typeof renderRecetas === 'function') renderRecetas();
+      showToast('🗑️ Insumo eliminado', 'info');
+    }
+  );
+}
+
+/* ── Exportar CSV ───────────────────────────────────────── */
+function exportInsumos() {
+  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const header  = ['Insumo','Precio compra ($)','Cantidad','Unidad','Costo por unidad ($)'];
+  const rows    = insumos.map(i => [
+    i.nombre, i.precio, i.cantidad, i.unidad,
+    costoUnitario(i).toFixed(2)
+  ]);
+  downloadCSV('insumos_makyta.csv', [header, ...rows]);
+  showToast('✅ CSV descargado');
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+(function initInsumos() {
+  if (!getInsumos()) {
+    setInsumos(DEFAULTS_INSUMOS.map(i => ({ ...i, updatedAt: new Date().toISOString() })));
+  }
+  renderInsumos();
+})();
+
+</script>
+
+<!-- ========================================================
+     PART 3 — MÓDULO RECETAS
+     localStorage key: makyta_recetas
+======================================================== -->
+<script>
+
+const KEY_RECETAS = 'makyta_recetas';
+
+function getRecetas() {
+  try { return JSON.parse(localStorage.getItem(KEY_RECETAS)) || null; }
+  catch { return null; }
+}
+
+function setRecetas(data) {
+  localStorage.setItem(KEY_RECETAS, JSON.stringify(data));
+}
+
+/* ── Recetas precargadas ────────────────────────────────── */
+const DEFAULTS_RECETAS = [
+  {
+    id:'rec-1', nombre:'Roll Filadelfia', precio:5500,
+    ingredientes:[
+      { insumoId:'ins-1', cantidad:120 },
+      { insumoId:'ins-2', cantidad:1   },
+      { insumoId:'ins-3', cantidad:80  },
+      { insumoId:'ins-5', cantidad:40  },
+      { insumoId:'ins-4', cantidad:50  },
+      { insumoId:'ins-7', cantidad:5   },
+    ]
+  },
+  {
+    id:'rec-2', nombre:'Roll California', precio:4800,
+    ingredientes:[
+      { insumoId:'ins-1',  cantidad:120 },
+      { insumoId:'ins-2',  cantidad:1   },
+      { insumoId:'ins-11', cantidad:80  },
+      { insumoId:'ins-4',  cantidad:50  },
+      { insumoId:'ins-6',  cantidad:0.5 },
+      { insumoId:'ins-9',  cantidad:15  },
+      { insumoId:'ins-7',  cantidad:3   },
+    ]
+  },
+  {
+    id:'rec-3', nombre:'Roll Volcán Salmón', precio:6200,
+    ingredientes:[
+      { insumoId:'ins-1', cantidad:130 },
+      { insumoId:'ins-2', cantidad:1   },
+      { insumoId:'ins-3', cantidad:100 },
+      { insumoId:'ins-5', cantidad:30  },
+      { insumoId:'ins-8', cantidad:10  },
+      { insumoId:'ins-9', cantidad:10  },
+    ]
+  },
+];
+
+/* ── Costo de una receta ────────────────────────────────── */
+function calcCostoReceta(ingredientes) {
+  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  return ingredientes.reduce((total, ing) => {
+    const ins = insumos.find(i => i.id === ing.insumoId);
+    return ins ? total + costoUnitario(ins) * ing.cantidad : total;
+  }, 0);
+}
+
+/* ── Semáforo ───────────────────────────────────────────── */
+function semaforoData(pctCosto) {
+  if (pctCosto < 25)  return { cls:'green',  emoji:'🟢', label:'Margen excelente'                      };
+  if (pctCosto <= 35) return { cls:'yellow', emoji:'🟡', label:'Margen aceptable'                      };
+  return               { cls:'red',    emoji:'🔴', label:'Sube el precio o reduce ingredientes' };
+}
+
+/* ── Render cards ───────────────────────────────────────── */
+function renderRecetas() {
+  const all     = getRecetas()  || DEFAULTS_RECETAS;
+  const insumos = getInsumos()  || DEFAULTS_INSUMOS;
+  const grid    = document.getElementById('recetasGrid');
+
+  if (!all.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 0111.18 0A4 4 0 0118 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+      <div class="empty-title">Sin recetas</div>
+      <div class="empty-text">Crea tu primer roll.</div>
+    </div>`;
+    updateRecetaStats(all, insumos);
+    return;
+  }
+
+  grid.innerHTML = all.map(rec => {
+    const costo  = calcCostoReceta(rec.ingredientes);
+    const pct    = rec.precio > 0 ? (costo / rec.precio) * 100 : 0;
+    const margen = 100 - pct;
+    const sem    = semaforoData(pct);
+
+    const colorVar = sem.cls === 'green' ? 'var(--green)' : sem.cls === 'yellow' ? 'var(--yellow)' : 'var(--red)';
+
+    const chips = rec.ingredientes.map(ing => {
+      const ins = insumos.find(i => i.id === ing.insumoId);
+      return ins
+        ? `<span class="recipe-chip">${esc(ins.nombre)} ${ing.cantidad}${ins.unidad}</span>`
+        : `<span class="recipe-chip" style="color:var(--red)">(insumo eliminado)</span>`;
+    }).join('');
+
+    return `<div class="recipe-card">
+      <div class="recipe-card-top">
+        <div>
+          <div class="recipe-name">${esc(rec.nombre)}</div>
+          <div class="semaphore ${sem.cls}" style="margin-top:.3rem">
+            <div class="semaphore-dot"></div>${sem.emoji} ${sem.label}
+          </div>
+        </div>
+        <div class="recipe-price">${clp(rec.precio)}</div>
+      </div>
+      <div class="recipe-card-mid">
+        <div class="recipe-kpis">
+          <div class="recipe-kpi">
+            <div class="recipe-kpi-label">Costo</div>
+            <div class="recipe-kpi-value">${clp(costo)}</div>
+          </div>
+          <div class="recipe-kpi">
+            <div class="recipe-kpi-label">% Costo</div>
+            <div class="recipe-kpi-value" style="color:${colorVar}">${pct.toFixed(1)}%</div>
+          </div>
+          <div class="recipe-kpi">
+            <div class="recipe-kpi-label">Margen</div>
+            <div class="recipe-kpi-value" style="color:var(--green)">${margen.toFixed(1)}%</div>
+          </div>
+          <div class="recipe-kpi">
+            <div class="recipe-kpi-label">Utilidad</div>
+            <div class="recipe-kpi-value">${clp(rec.precio - costo)}</div>
+          </div>
+        </div>
+        <div class="recipe-chips">${chips}</div>
+      </div>
+      <div class="recipe-card-foot">
+        <button class="btn btn-ghost btn-sm" onclick="duplicarReceta('${rec.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Duplicar
+        </button>
+        <button class="btn btn-ghost btn-icon" onclick="editReceta('${rec.id}')" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon danger" onclick="deleteReceta('${rec.id}')" title="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateRecetaStats(all, insumos);
+}
+
+/* ── Stats ──────────────────────────────────────────────── */
+function updateRecetaStats(all, insumos) {
+  all     = all     || getRecetas()  || [];
+  insumos = insumos || getInsumos()  || DEFAULTS_INSUMOS;
+
+  document.getElementById('st-total-recetas').textContent = all.length;
+
+  if (!all.length) {
+    ['st-margen-prom','st-roll-rentable','st-roll-caro'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
+  const enriched = all.map(r => {
+    const c   = calcCostoReceta(r.ingredientes);
+    const pct = r.precio > 0 ? (c / r.precio) * 100 : 0;
+    return { ...r, costo:c, pct };
+  });
+
+  const avgMargen = enriched.reduce((s, r) => s + (100 - r.pct), 0) / enriched.length;
+  document.getElementById('st-margen-prom').textContent = avgMargen.toFixed(1) + '%';
+
+  // Publica margen promedio para el módulo de equilibrio
+  window._avgMargen = avgMargen;
+  const eqEl = document.getElementById('eq-margen');
+  if (eqEl) {
+    eqEl.value = avgMargen.toFixed(1);
+    document.getElementById('eq-margen-hint').textContent =
+      'Calculado desde recetas (' + avgMargen.toFixed(1) + '%)';
+    if (typeof calcEquilibrio === 'function') calcEquilibrio();
+  }
+
+  const rentable = enriched.reduce((a, b) => a.pct < b.pct ? a : b);
+  const masCaro  = enriched.reduce((a, b) => a.precio > b.precio ? a : b);
+  document.getElementById('st-roll-rentable').textContent = rentable.nombre;
+  document.getElementById('st-roll-caro').textContent     = masCaro.nombre;
+}
+
+/* ── Fila de ingrediente en modal ───────────────────────── */
+function buildIngRow(ing) {
+  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const opts = `<option value="">Selecciona insumo…</option>` +
+    insumos.map(i =>
+      `<option value="${i.id}" ${ing && ing.insumoId === i.id ? 'selected' : ''}>${esc(i.nombre)}</option>`
+    ).join('');
+
+  const selIns = ing ? insumos.find(i => i.id === ing.insumoId) : null;
+
+  const row = document.createElement('div');
+  row.setAttribute('data-ing-row', '');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 52px auto;gap:.5rem;align-items:center';
+  row.innerHTML = `
+    <select class="form-select" style="font-size:.8125rem"
+      onchange="syncIngUnit(this);calcRecetaLive()">
+      ${opts}
+    </select>
+    <input type="number" class="form-input" style="font-size:.8125rem"
+      placeholder="Cant." min="0" step="any"
+      value="${ing ? ing.cantidad : ''}"
+      oninput="calcRecetaLive()">
+    <span class="badge badge-gray" style="justify-content:center;text-align:center">
+      ${selIns ? selIns.unidad : '—'}
+    </span>
+    <button type="button" class="btn btn-ghost btn-icon danger"
+      onclick="this.closest('[data-ing-row]').remove();calcRecetaLive()" title="Quitar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>`;
+  return row;
+}
+
+function syncIngUnit(select) {
+  const ins = (getInsumos() || DEFAULTS_INSUMOS).find(i => i.id === select.value);
+  select.closest('[data-ing-row]').querySelector('.badge').textContent = ins ? ins.unidad : '—';
+}
+
+function addIngredienteRow(ing) {
+  document.getElementById('ingredienteRows').appendChild(buildIngRow(ing || null));
+  calcRecetaLive();
+}
+
+/* ── Cálculo en vivo (modal) ────────────────────────────── */
+function calcRecetaLive() {
+  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const precio  = parseFloat(document.getElementById('recetaPrecio').value) || 0;
+  const rows    = document.querySelectorAll('#ingredienteRows [data-ing-row]');
+
+  let costo = 0;
+  rows.forEach(row => {
+    const id  = row.querySelector('select').value;
+    const qty = parseFloat(row.querySelector('input').value) || 0;
+    const ins = insumos.find(i => i.id === id);
+    if (ins && qty > 0) costo += costoUnitario(ins) * qty;
+  });
+
+  document.getElementById('recetaCostoTotal').textContent = clp(costo);
+
+  const semEl  = document.getElementById('recetaSemaforo');
+  const hintEl = document.getElementById('recetaHint');
+  const hintTx = document.getElementById('recetaHintText');
+
+  if (precio > 0 && costo > 0) {
+    const pct = (costo / precio) * 100;
+    const sem = semaforoData(pct);
+    semEl.innerHTML = `<span class="semaphore ${sem.cls}">
+      <span class="semaphore-dot"></span>${sem.emoji} ${pct.toFixed(1)}% — ${sem.label}
+    </span>`;
+
+    const precioIdeal = Math.ceil(costo / 0.30 / 100) * 100; // redondeo al 100 más cercano
+    hintEl.className  = `hint-box mt-3 ${sem.cls === 'green' ? 'ok' : sem.cls === 'yellow' ? 'warn' : 'danger'}`;
+    hintEl.classList.remove('hidden');
+
+    if (sem.cls === 'green') {
+      hintTx.textContent = `¡Margen excelente! Utilidad bruta de ${clp(precio - costo)} por roll.`;
+    } else {
+      hintTx.textContent =
+        `Para lograr 30% de costo, tu precio de venta debería ser ${clp(precioIdeal)}.`;
+    }
+  } else {
+    semEl.textContent = '—';
+    hintEl.classList.add('hidden');
+  }
+}
+
+/* ── Modal: abrir nuevo ─────────────────────────────────── */
+function openRecetaModal() {
+  document.getElementById('recetaModalTitle').textContent = 'Nueva receta';
+  document.getElementById('recetaEditId').value  = '';
+  document.getElementById('recetaNombre').value  = '';
+  document.getElementById('recetaPrecio').value  = '';
+  document.getElementById('ingredienteRows').innerHTML = '';
+  document.getElementById('recetaCostoTotal').textContent = '$0';
+  document.getElementById('recetaSemaforo').textContent   = '—';
+  document.getElementById('recetaHint').classList.add('hidden');
+  addIngredienteRow();
+  openModal('recetaModal');
+  setTimeout(() => document.getElementById('recetaNombre').focus(), 120);
+}
+
+/* ── Modal: editar ──────────────────────────────────────── */
+function editReceta(id) {
+  const rec = (getRecetas() || DEFAULTS_RECETAS).find(r => r.id === id);
+  if (!rec) return;
+  document.getElementById('recetaModalTitle').textContent = 'Editar receta';
+  document.getElementById('recetaEditId').value  = id;
+  document.getElementById('recetaNombre').value  = rec.nombre;
+  document.getElementById('recetaPrecio').value  = rec.precio;
+  document.getElementById('ingredienteRows').innerHTML = '';
+  rec.ingredientes.forEach(ing => addIngredienteRow(ing));
+  calcRecetaLive();
+  openModal('recetaModal');
+  setTimeout(() => document.getElementById('recetaNombre').focus(), 120);
+}
+
+/* ── Guardar ────────────────────────────────────────────── */
+function saveReceta() {
+  const nombre = document.getElementById('recetaNombre').value.trim();
+  const precio = parseFloat(document.getElementById('recetaPrecio').value);
+  const editId = document.getElementById('recetaEditId').value;
+
+  if (!nombre)                      return showToast('⚠️ Ingresa el nombre del roll', 'error');
+  if (isNaN(precio) || precio <= 0) return showToast('⚠️ Precio de venta inválido', 'error');
+
+  const rows = document.querySelectorAll('#ingredienteRows [data-ing-row]');
+  const ingredientes = [];
+  let rowError = false;
+
+  rows.forEach(row => {
+    const insumoId = row.querySelector('select').value;
+    const cantidad = parseFloat(row.querySelector('input').value);
+    if (insumoId && cantidad > 0) {
+      ingredientes.push({ insumoId, cantidad });
+    } else if (insumoId || cantidad > 0) {
+      rowError = true;
+    }
+  });
+
+  if (rowError)              return showToast('⚠️ Completa todos los ingredientes', 'error');
+  if (!ingredientes.length)  return showToast('⚠️ Agrega al menos un ingrediente', 'error');
+
+  let recetas = getRecetas();
+  if (!recetas) recetas = DEFAULTS_RECETAS.map(r => ({
+    ...r, ingredientes: r.ingredientes.map(i => ({ ...i }))
+  }));
+
+  const now = new Date().toISOString();
+  if (editId) {
+    const idx = recetas.findIndex(r => r.id === editId);
+    if (idx >= 0) recetas[idx] = { ...recetas[idx], nombre, precio, ingredientes, updatedAt:now };
+  } else {
+    recetas.push({ id: uid(), nombre, precio, ingredientes, updatedAt:now });
+  }
+
+  setRecetas(recetas);
+  closeModal('recetaModal');
+  renderRecetas();
+  showToast('✅ Receta guardada');
+  if (typeof calcEquilibrio === 'function') calcEquilibrio();
+}
+
+/* ── Duplicar ───────────────────────────────────────────── */
+function duplicarReceta(id) {
+  let recetas = getRecetas();
+  if (!recetas) recetas = DEFAULTS_RECETAS.map(r => ({
+    ...r, ingredientes: r.ingredientes.map(i => ({ ...i }))
+  }));
+  const rec = recetas.find(r => r.id === id);
+  if (!rec) return;
+  recetas.push({
+    ...rec,
+    id: uid(),
+    nombre: rec.nombre + ' (copia)',
+    updatedAt: new Date().toISOString(),
+    ingredientes: rec.ingredientes.map(i => ({ ...i }))
+  });
+  setRecetas(recetas);
+  renderRecetas();
+  showToast('✅ Receta duplicada');
+}
+
+/* ── Eliminar ───────────────────────────────────────────── */
+function deleteReceta(id) {
+  const rec = (getRecetas() || DEFAULTS_RECETAS).find(r => r.id === id);
+  if (!rec) return;
+  confirmDelete(
+    `¿Eliminar "${rec.nombre}"?`,
+    'Esta receta se eliminará permanentemente.',
+    () => {
+      setRecetas((getRecetas() || []).filter(r => r.id !== id));
+      renderRecetas();
+      if (typeof calcEquilibrio === 'function') calcEquilibrio();
+      showToast('🗑️ Receta eliminada', 'info');
+    }
+  );
+}
+
+/* ── Reporte PDF (ventana de impresión) ─────────────────── */
+function exportRecetas() {
+  const all     = getRecetas()  || DEFAULTS_RECETAS;
+  const insumos = getInsumos()  || DEFAULTS_INSUMOS;
+  const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
+
+  const tbody = all.map(rec => {
+    const costo  = calcCostoReceta(rec.ingredientes);
+    const pct    = rec.precio > 0 ? (costo / rec.precio) * 100 : 0;
+    const sem    = semaforoData(pct);
+    const color  = sem.cls === 'green' ? '#16a34a' : sem.cls === 'yellow' ? '#d97706' : '#dc2626';
+    const ings   = rec.ingredientes.map(ing => {
+      const ins = insumos.find(i => i.id === ing.insumoId);
+      return ins ? `${ins.nombre} ${ing.cantidad}${ins.unidad}` : '—';
+    }).join(' · ');
+    return `<tr>
+      <td><strong>${esc(rec.nombre)}</strong></td>
+      <td>${clp(rec.precio)}</td>
+      <td>${clp(costo)}</td>
+      <td style="color:${color};font-weight:600">${pct.toFixed(1)}% ${sem.emoji}</td>
+      <td style="font-size:.75rem;color:#6b7280">${esc(ings)}</td>
+    </tr>`;
+  }).join('');
+
+  const win = window.open('','_blank');
+  if (!win) return showToast('⚠️ Permite ventanas emergentes', 'error');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Recetas — Makyta Sushi</title>
+    <style>
+      body{font-family:-apple-system,sans-serif;padding:2rem;color:#111}
+      h1{font-size:1.25rem;margin-bottom:.125rem}
+      .sub{color:#6b7280;font-size:.875rem;margin-bottom:1.5rem}
+      table{width:100%;border-collapse:collapse;font-size:.875rem}
+      th{background:#f3f4f6;padding:.5rem .75rem;text-align:left;font-size:.7rem;
+         text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #e5e7eb}
+      td{padding:.6rem .75rem;border-bottom:1px solid #f3f4f6;vertical-align:top}
+      @media print{body{padding:1rem}}
+    </style></head><body>
+    <h1>Reporte de Recetas — Makyta Sushi</h1>
+    <div class="sub">Generado el ${fecha} · ${all.length} recetas</div>
+    <table><thead><tr>
+      <th>Roll</th><th>Precio venta</th><th>Costo</th><th>% Costo</th><th>Ingredientes</th>
+    </tr></thead><tbody>${tbody}</tbody></table>
+    <script>setTimeout(()=>window.print(),300)<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+(function initRecetas() {
+  if (!getRecetas()) {
+    setRecetas(DEFAULTS_RECETAS.map(r => ({
+      ...r,
+      updatedAt: new Date().toISOString(),
+      ingredientes: r.ingredientes.map(i => ({ ...i }))
+    })));
+  }
+  renderRecetas();
+})();
+
+</script>
+
+<!-- ========================================================
+     PART 4 — MÓDULO GASTOS Y PERSONAL
+     localStorage keys: makyta_gastos | makyta_personal
+======================================================== -->
+<script>
+
+const KEY_GASTOS   = 'makyta_gastos';
+const KEY_PERSONAL = 'makyta_personal';
+
+function getGastos()   { try { return JSON.parse(localStorage.getItem(KEY_GASTOS))   || null; } catch { return null; } }
+function setGastos(d)  { localStorage.setItem(KEY_GASTOS,   JSON.stringify(d)); }
+function getPersonal() { try { return JSON.parse(localStorage.getItem(KEY_PERSONAL)) || null; } catch { return null; } }
+function setPersonal(d){ localStorage.setItem(KEY_PERSONAL, JSON.stringify(d)); }
+
+/* ── Datos precargados ──────────────────────────────────── */
+const DEFAULTS_GASTOS = [
+  { id:'gas-1', categoria:'Arriendo del local',         monto:350000, notas:'' },
+  { id:'gas-2', categoria:'Sueldos y personal',         monto:800000, notas:'Actualizar si cambia el equipo' },
+  { id:'gas-3', categoria:'Luz',                        monto:50000,  notas:'' },
+  { id:'gas-4', categoria:'Agua',                       monto:20000,  notas:'' },
+  { id:'gas-5', categoria:'Gas',                        monto:35000,  notas:'' },
+  { id:'gas-6', categoria:'Limpieza y desechables',     monto:30000,  notas:'' },
+  { id:'gas-7', categoria:'Internet y teléfono',        monto:25000,  notas:'' },
+];
+
+/* Expuesto al módulo equilibrio */
+function getTotalGastos() {
+  return (getGastos() || DEFAULTS_GASTOS).reduce((s, g) => s + (Number(g.monto) || 0), 0);
+}
+
+/* ── Render tabla gastos (siempre editable) ─────────────── */
+function renderGastos() {
+  const gastos = getGastos() || DEFAULTS_GASTOS;
+  const total  = gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
+
+  document.getElementById('gastosBody').innerHTML = gastos.map(g => `
+    <tr>
+      <td>
+        <input class="form-input" style="font-size:.875rem" value="${esc(g.categoria)}"
+          onblur="patchGasto('${g.id}','categoria',this.value)">
+      </td>
+      <td>
+        <input type="number" class="form-input" style="max-width:160px;font-size:.875rem"
+          value="${g.monto}" min="0"
+          oninput="liveGastosTotal()"
+          onblur="patchGasto('${g.id}','monto',this.value)">
+      </td>
+      <td>
+        <input class="form-input" style="font-size:.8125rem;color:var(--gray-500)"
+          placeholder="Notas opcionales…" value="${esc(g.notas || '')}"
+          onblur="patchGasto('${g.id}','notas',this.value)">
+      </td>
+      <td>
+        <button class="btn btn-ghost btn-icon danger" onclick="deleteGasto('${g.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('gastosTotal').textContent = clp(total);
+  updateGastosStats(gastos, total);
+  if (typeof calcEquilibrio === 'function') calcEquilibrio();
+}
+
+/* Suma en vivo mientras se escribe, sin guardar */
+function liveGastosTotal() {
+  let total = 0;
+  document.querySelectorAll('#gastosBody input[type="number"]')
+    .forEach(inp => total += Number(inp.value) || 0);
+  document.getElementById('gastosTotal').textContent = clp(total);
+  const eq = document.getElementById('eq-gastos');
+  if (eq) eq.textContent = clp(total);
+}
+
+/* Guarda al perder foco */
+function patchGasto(id, field, value) {
+  let gastos = getGastos();
+  if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
+  const g = gastos.find(g => g.id === id);
+  if (!g) return;
+  const parsed = field === 'monto' ? (Number(value) || 0) : value;
+  if (g[field] === parsed) return;   // sin cambios
+  g[field] = parsed;
+  setGastos(gastos);
+  renderGastos();
+  showToast('✅ Guardado');
+}
+
+function addGastoRow() {
+  let gastos = getGastos();
+  if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
+  gastos.push({ id: uid(), categoria: 'Nuevo gasto', monto: 0, notas: '' });
+  setGastos(gastos);
+  renderGastos();
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#gastosBody tr');
+    rows[rows.length - 1]?.querySelector('input')?.focus();
+  }, 80);
+}
+
+function deleteGasto(id) {
+  const g = (getGastos() || DEFAULTS_GASTOS).find(g => g.id === id);
+  if (!g) return;
+  confirmDelete(
+    `¿Eliminar "${g.categoria}"?`,
+    'Se eliminará de tu presupuesto mensual.',
+    () => {
+      setGastos((getGastos() || []).filter(g => g.id !== id));
+      renderGastos();
+      showToast('🗑️ Gasto eliminado', 'info');
+    }
+  );
+}
+
+/* ── Stats gastos ───────────────────────────────────────── */
+function updateGastosStats(gastos, total) {
+  gastos = gastos || getGastos() || DEFAULTS_GASTOS;
+  total  = total  != null ? total : gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
+
+  document.getElementById('st-total-gastos').textContent = clp(total);
+  document.getElementById('st-gasto-diario').textContent = clp(total / 30);
+
+  if (gastos.length) {
+    const mayor = gastos.reduce((a, b) => Number(a.monto) >= Number(b.monto) ? a : b);
+    document.getElementById('st-mayor-gasto').textContent = mayor.categoria;
+  }
+
+  const eqEl = document.getElementById('eq-gastos');
+  if (eqEl) eqEl.textContent = clp(total);
+}
+
+/* ══════════════════════════════════════════════════════════
+   PERSONAL
+══════════════════════════════════════════════════════════ */
+
+function timeToMins(t) {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function horasEntre(ini, fin) {
+  const diff = timeToMins(fin) - timeToMins(ini);
+  return diff > 0 ? diff / 60 : 0;
+}
+
+function costoPorHora(emp) {
+  const hDia  = horasEntre(emp.entrada, emp.salida);
+  const hMes  = hDia * (emp.dias || 5) * 4.33;
+  return hMes > 0 ? emp.sueldo / hMes : 0;
+}
+
+/* ── Render tarjetas personal ───────────────────────────── */
+function renderPersonal() {
+  const personal = getPersonal() || [];
+  const grid     = document.getElementById('personalGrid');
+
+  if (!personal.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <div class="empty-title">Sin empleados</div>
+      <div class="empty-text">Agrega tu equipo de trabajo.</div>
+    </div>`;
+    document.getElementById('analisisBody').innerHTML =
+      '<p class="text-sm text-muted">Agrega empleados para ver el análisis de horas.</p>';
+    return;
+  }
+
+  grid.innerHTML = personal.map(emp => {
+    const cph        = costoPorHora(emp);
+    const hMuertas   = horasEntre(emp.bajaInicio, emp.bajaFin);
+    const costoMuerto = cph * hMuertas * (emp.dias || 5) * 4.33;
+    const initials   = emp.nombre.split(' ').slice(0,2).map(p => p[0]?.toUpperCase() || '').join('');
+
+    return `<div class="personal-card">
+      <div class="personal-card-top">
+        <div class="personal-avatar">${initials}</div>
+        <div>
+          <div class="personal-name">${esc(emp.nombre)}</div>
+          <div class="personal-role">${emp.dias} días/sem · ${emp.entrada}–${emp.salida}</div>
+        </div>
+      </div>
+      <div class="personal-card-body">
+        <div class="personal-rows">
+          <div class="personal-row">
+            <span class="personal-row-label">Sueldo mensual</span>
+            <span class="personal-row-value">${clp(emp.sueldo)}</span>
+          </div>
+          <div class="personal-row">
+            <span class="personal-row-label">Costo por hora</span>
+            <span class="personal-row-value">${clp(cph)}/hr</span>
+          </div>
+          <div class="personal-row">
+            <span class="personal-row-label">Baja afluencia</span>
+            <span class="personal-row-value">${hMuertas.toFixed(1)} hrs/día (${emp.bajaInicio}–${emp.bajaFin})</span>
+          </div>
+          <div class="personal-row">
+            <span class="personal-row-label">Costo tiempo muerto/mes</span>
+            <span class="personal-row-value text-red font-medium">${clp(costoMuerto)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="personal-card-foot">
+        <button class="btn btn-ghost btn-icon" onclick="editPersonal('${emp.id}')" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon danger" onclick="deletePersonal('${emp.id}')" title="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderAnalisisHoras(personal);
+}
+
+/* ── Análisis horas muertas ─────────────────────────────── */
+function renderAnalisisHoras(personal) {
+  const body    = document.getElementById('analisisBody');
+  const conBaja = personal.filter(emp => horasEntre(emp.bajaInicio, emp.bajaFin) > 0);
+
+  if (!conBaja.length) {
+    body.innerHTML = '<p class="text-sm text-muted">Ningún empleado tiene horario de baja afluencia registrado.</p>';
+    return;
+  }
+
+  let totalMuerto = 0;
+  const rows = conBaja.map(emp => {
+    const cph      = costoPorHora(emp);
+    const hM       = horasEntre(emp.bajaInicio, emp.bajaFin);
+    const diasMes  = (emp.dias || 5) * 4.33;
+    const costoM   = cph * hM * diasMes;
+    const pctSueldo = emp.sueldo > 0 ? (costoM / emp.sueldo) * 100 : 0;
+    totalMuerto += costoM;
+    return `<tr>
+      <td class="td-main">${esc(emp.nombre)}</td>
+      <td>${emp.bajaInicio}–${emp.bajaFin}</td>
+      <td>${hM.toFixed(1)} hrs/día</td>
+      <td class="td-num" style="color:var(--red)">${clp(costoM)}/mes</td>
+      <td><span class="badge ${pctSueldo > 20 ? 'badge-red' : 'badge-yellow'}">${pctSueldo.toFixed(0)}% del sueldo</span></td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="hint-box danger mb-3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>Estás pagando <strong>${clp(totalMuerto)}/mes</strong> en horas de baja afluencia.
+         Optimizar los turnos podría liberar <strong>${clp(totalMuerto)}</strong> de caja mensual.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Empleado</th><th>Horario muerto</th>
+          <th>Hrs/día</th><th>Costo/mes</th><th>% sueldo</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ── Modal personal: nuevo ──────────────────────────────── */
+function openPersonalModal() {
+  document.getElementById('personalModalTitle').textContent = 'Agregar empleado';
+  document.getElementById('personalEditId').value     = '';
+  document.getElementById('personalNombre').value     = '';
+  document.getElementById('personalDias').value       = '5';
+  document.getElementById('personalSueldo').value     = '';
+  document.getElementById('personalEntrada').value    = '09:00';
+  document.getElementById('personalSalida').value     = '18:00';
+  document.getElementById('personalBajaInicio').value = '15:00';
+  document.getElementById('personalBajaFin').value    = '17:00';
+  openModal('personalModal');
+  setTimeout(() => document.getElementById('personalNombre').focus(), 120);
+}
+
+/* ── Modal personal: editar ─────────────────────────────── */
+function editPersonal(id) {
+  const emp = (getPersonal() || []).find(p => p.id === id);
+  if (!emp) return;
+  document.getElementById('personalModalTitle').textContent = 'Editar empleado';
+  document.getElementById('personalEditId').value     = id;
+  document.getElementById('personalNombre').value     = emp.nombre;
+  document.getElementById('personalDias').value       = emp.dias;
+  document.getElementById('personalSueldo').value     = emp.sueldo;
+  document.getElementById('personalEntrada').value    = emp.entrada;
+  document.getElementById('personalSalida').value     = emp.salida;
+  document.getElementById('personalBajaInicio').value = emp.bajaInicio;
+  document.getElementById('personalBajaFin').value    = emp.bajaFin;
+  openModal('personalModal');
+  setTimeout(() => document.getElementById('personalNombre').focus(), 120);
+}
+
+/* ── Guardar empleado ───────────────────────────────────── */
+function savePersonal() {
+  const nombre     = document.getElementById('personalNombre').value.trim();
+  const dias       = parseInt(document.getElementById('personalDias').value);
+  const sueldo     = parseFloat(document.getElementById('personalSueldo').value);
+  const entrada    = document.getElementById('personalEntrada').value;
+  const salida     = document.getElementById('personalSalida').value;
+  const bajaInicio = document.getElementById('personalBajaInicio').value;
+  const bajaFin    = document.getElementById('personalBajaFin').value;
+  const editId     = document.getElementById('personalEditId').value;
+
+  if (!nombre)                          return showToast('⚠️ Ingresa el nombre del empleado', 'error');
+  if (isNaN(dias) || dias < 1 || dias > 7) return showToast('⚠️ Días por semana inválido (1–7)', 'error');
+  if (isNaN(sueldo) || sueldo <= 0)     return showToast('⚠️ Ingresa un sueldo válido', 'error');
+  if (horasEntre(entrada, salida) <= 0) return showToast('⚠️ Horario de entrada/salida inválido', 'error');
+
+  let personal = getPersonal() || [];
+  const data   = { nombre, dias, sueldo, entrada, salida, bajaInicio, bajaFin, updatedAt: new Date().toISOString() };
+
+  if (editId) {
+    const idx = personal.findIndex(p => p.id === editId);
+    if (idx >= 0) personal[idx] = { ...personal[idx], ...data };
+  } else {
+    personal.push({ id: uid(), ...data });
+  }
+
+  setPersonal(personal);
+  closeModal('personalModal');
+  renderPersonal();
+  showToast('✅ Empleado guardado');
+}
+
+/* ── Eliminar empleado ──────────────────────────────────── */
+function deletePersonal(id) {
+  const emp = (getPersonal() || []).find(p => p.id === id);
+  if (!emp) return;
+  confirmDelete(
+    `¿Eliminar a "${emp.nombre}"?`,
+    'Se eliminará del análisis de personal.',
+    () => {
+      setPersonal((getPersonal() || []).filter(p => p.id !== id));
+      renderPersonal();
+      showToast('🗑️ Empleado eliminado', 'info');
+    }
+  );
+}
+
+/* ── Reporte PDF ────────────────────────────────────────── */
+function exportGastos() {
+  const gastos   = getGastos()   || DEFAULTS_GASTOS;
+  const personal = getPersonal() || [];
+  const total    = getTotalGastos();
+  const fecha    = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
+
+  const gRows = gastos.map(g => `<tr>
+    <td>${esc(g.categoria)}</td>
+    <td>${clp(Number(g.monto)||0)}</td>
+    <td style="color:#6b7280;font-size:.8rem">${esc(g.notas||'')}</td>
+  </tr>`).join('');
+
+  const pRows = personal.map(emp => {
+    const cph = costoPorHora(emp);
+    const hM  = horasEntre(emp.bajaInicio, emp.bajaFin);
+    const cM  = cph * hM * (emp.dias||5) * 4.33;
+    return `<tr>
+      <td>${esc(emp.nombre)}</td>
+      <td>${emp.dias} días/sem · ${emp.entrada}–${emp.salida}</td>
+      <td>${clp(emp.sueldo)}</td>
+      <td>${clp(cph)}/hr</td>
+      <td style="color:#dc2626">${clp(cM)}/mes</td>
+    </tr>`;
+  }).join('');
+
+  const win = window.open('','_blank');
+  if (!win) return showToast('⚠️ Permite ventanas emergentes', 'error');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Gastos — Makyta Sushi</title>
+    <style>body{font-family:-apple-system,sans-serif;padding:2rem;color:#111}
+    h1{font-size:1.25rem;margin-bottom:.125rem}h2{font-size:1rem;margin:1.5rem 0 .75rem;color:#374151}
+    .sub{color:#6b7280;font-size:.875rem;margin-bottom:1.5rem}
+    .total{font-size:1.125rem;font-weight:700;color:#dc2626;margin-top:.75rem;padding:.5rem 0;border-top:2px solid #e5e7eb}
+    table{width:100%;border-collapse:collapse;font-size:.875rem}
+    th{background:#f3f4f6;padding:.5rem .75rem;text-align:left;font-size:.7rem;
+       text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #e5e7eb}
+    td{padding:.6rem .75rem;border-bottom:1px solid #f3f4f6}
+    @media print{body{padding:1rem}}</style>
+    </head><body>
+    <h1>Gastos y Personal — Makyta Sushi</h1>
+    <div class="sub">Generado el ${fecha}</div>
+    <h2>Gastos Fijos Mensuales</h2>
+    <table><thead><tr><th>Categoría</th><th>Monto</th><th>Notas</th></tr></thead>
+    <tbody>${gRows}</tbody></table>
+    <div class="total">Total mensual: ${clp(total)}</div>
+    ${personal.length ? `<h2>Análisis de Personal</h2>
+    <table><thead><tr>
+      <th>Nombre</th><th>Horario</th><th>Sueldo</th>
+      <th>Costo/hr</th><th>Costo hrs muertas</th>
+    </tr></thead><tbody>${pRows}</tbody></table>` : ''}
+    <script>setTimeout(()=>window.print(),300)<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+(function initGastos() {
+  if (!getGastos()) setGastos(DEFAULTS_GASTOS.map(g => ({ ...g })));
+  renderGastos();
+  renderPersonal();
+})();
+
+</script>
+
+<!-- ========================================================
+     PART 5 — PUNTO DE EQUILIBRIO
+======================================================== -->
+<script>
+
+/* ── Cálculo principal ──────────────────────────────────── */
+function calcEquilibrio() {
+  const gastos = getTotalGastos();
+  const ticket = parseFloat(document.getElementById('eq-ticket').value)    || 0;
+  const margen = parseFloat(document.getElementById('eq-margen').value)    || 0;
+  const actual = parseFloat(document.getElementById('eq-ventas-act').value)|| 0;
+
+  // Siempre actualiza la tarjeta de gastos
+  document.getElementById('eq-gastos').textContent = clp(gastos);
+
+  if (!gastos || !ticket || !margen) {
+    ['eq-ventas-min','eq-rolls-mes','eq-rolls-dia'].forEach(id =>
+      document.getElementById(id).textContent = id.includes('rolls') ? '0' : '$0');
+    document.getElementById('eq-pct').textContent  = '0%';
+    document.getElementById('eq-bar').style.width  = '0%';
+    renderScenarios(gastos, ticket, margen);
+    return;
+  }
+
+  const ventasMin = gastos / (margen / 100);
+  const rollsMes  = ventasMin / ticket;
+  const rollsDia  = rollsMes / 30;
+  const pctRaw    = actual > 0 ? (actual / ventasMin) * 100 : 0;
+  const pctBar    = Math.min(pctRaw, 100);
+
+  document.getElementById('eq-ventas-min').textContent = clp(ventasMin);
+  document.getElementById('eq-rolls-mes').textContent  = Math.ceil(rollsMes).toLocaleString('es-CL');
+  document.getElementById('eq-rolls-dia').textContent  = Math.ceil(rollsDia).toLocaleString('es-CL');
+  document.getElementById('eq-pct').textContent        = pctRaw.toFixed(1) + '%';
+
+  // Barra de progreso
+  const bar     = document.getElementById('eq-bar');
+  bar.style.width = pctBar + '%';
+  bar.className   = 'progress-fill ' + (pctRaw >= 100 ? 'ok' : pctRaw >= 50 ? 'warn' : '');
+
+  // Hint box
+  const hint = document.getElementById('eq-hint');
+  const p    = hint.querySelector('p');
+  let cls, msg;
+
+  if (actual <= 0) {
+    cls = 'info';
+    msg = `Necesitas vender ${clp(ventasMin)} este mes (${Math.ceil(rollsDia)} rolls/día) para cubrir tus gastos fijos.`;
+  } else if (pctRaw >= 100) {
+    cls = 'ok';
+    msg = `🎉 ¡Punto de equilibrio superado! Tienes ${clp(actual - ventasMin)} por encima del mínimo este mes.`;
+  } else if (pctRaw >= 80) {
+    cls = 'ok';
+    msg = `¡Vas muy bien! Te faltan ${clp(ventasMin - actual)} para cubrir todos los gastos este mes.`;
+  } else if (pctRaw >= 50) {
+    cls = 'warn';
+    msg = `A mitad del camino. Te faltan ${clp(ventasMin - actual)} para alcanzar el punto de equilibrio.`;
+  } else {
+    cls = 'danger';
+    msg = `Estás al ${pctRaw.toFixed(0)}% del punto de equilibrio. Necesitas ${clp(ventasMin - actual)} más este mes.`;
+  }
+
+  hint.className = `hint-box ${cls} mt-3`;
+  p.textContent  = msg;
+
+  renderScenarios(gastos, ticket, margen);
+}
+
+/* ── Tabla de escenarios ────────────────────────────────── */
+function renderScenarios(gastos, ticket, margen) {
+  const scenarios = [
+    { label:'Conservador', tMult:0.80, mDelta:-5  },
+    { label:'Actual',      tMult:1.00, mDelta: 0, highlight: true },
+    { label:'Optimista',   tMult:1.20, mDelta:+5  },
+  ];
+
+  document.getElementById('scenariosBody').innerHTML = scenarios.map(sc => {
+    const t  = Math.round(ticket * sc.tMult);
+    const m  = Math.max(1, Math.min(99, margen + sc.mDelta));
+    const vm = gastos > 0 && t > 0 && m > 0 ? gastos / (m / 100) : 0;
+    const rd = vm > 0 && t > 0 ? Math.ceil(vm / t / 30) : 0;
+    const hl = sc.highlight ? 'class="scenario-row-highlight"' : '';
+    return `<tr ${hl}>
+      <td><strong>${sc.label}</strong></td>
+      <td>${clp(t)}</td>
+      <td>${m.toFixed(1)}%</td>
+      <td>${clp(vm)}</td>
+      <td style="font-weight:700">${rd}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Reporte PDF ────────────────────────────────────────── */
+function exportEquilibrio() {
+  const gastos  = getTotalGastos();
+  const ticket  = parseFloat(document.getElementById('eq-ticket').value)     || 0;
+  const margen  = parseFloat(document.getElementById('eq-margen').value)     || 0;
+  const actual  = parseFloat(document.getElementById('eq-ventas-act').value) || 0;
+  const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
+
+  const ventasMin = margen > 0 && ticket > 0 ? gastos / (margen / 100) : 0;
+  const rollsMes  = ventasMin > 0 && ticket > 0 ? Math.ceil(ventasMin / ticket) : 0;
+  const rollsDia  = Math.ceil(rollsMes / 30);
+  const pct       = ventasMin > 0 && actual > 0 ? Math.min((actual / ventasMin) * 100, 100) : 0;
+
+  const scenarios = [
+    { label:'Conservador', tMult:0.80, mDelta:-5  },
+    { label:'Actual',      tMult:1.00, mDelta: 0, hl: true },
+    { label:'Optimista',   tMult:1.20, mDelta:+5  },
+  ];
+
+  const scRows = scenarios.map(sc => {
+    const t  = Math.round(ticket * sc.tMult);
+    const m  = Math.max(1, Math.min(99, margen + sc.mDelta));
+    const vm = gastos > 0 && t > 0 && m > 0 ? gastos / (m / 100) : 0;
+    const rd = vm > 0 && t > 0 ? Math.ceil(vm / t / 30) : 0;
+    const bg = sc.hl ? 'background:#fef2f2;color:#dc2626;font-weight:600' : '';
+    return `<tr style="${bg}">
+      <td>${sc.label}</td><td>${clp(t)}</td><td>${m.toFixed(1)}%</td>
+      <td>${clp(vm)}</td><td>${rd}</td>
+    </tr>`;
+  }).join('');
+
+  // Gastos detalle
+  const gastosList = (getGastos() || DEFAULTS_GASTOS)
+    .map(g => `<li>${esc(g.categoria)}: ${clp(Number(g.monto)||0)}</li>`).join('');
+
+  const win = window.open('','_blank');
+  if (!win) return showToast('⚠️ Permite ventanas emergentes', 'error');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Punto de Equilibrio — Makyta Sushi</title>
+    <style>
+      body{font-family:-apple-system,sans-serif;padding:2rem;color:#111;max-width:900px;margin:0 auto}
+      h1{font-size:1.25rem;margin-bottom:.125rem}
+      h2{font-size:1rem;margin:1.5rem 0 .75rem;color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:.375rem}
+      .sub{color:#6b7280;font-size:.875rem;margin-bottom:1.5rem}
+      .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+      .kpi{border:1px solid #e5e7eb;border-radius:8px;padding:.875rem;text-align:center}
+      .kpi-label{font-size:.6875rem;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:.25rem}
+      .kpi-value{font-size:1.375rem;font-weight:700;color:#111}
+      .kpi-value.red{color:#dc2626}
+      .progress-bg{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:.5rem 0}
+      .progress-fill{height:100%;border-radius:999px;background:${pct>=80?'#16a34a':pct>=50?'#d97706':'#dc2626'}}
+      table{width:100%;border-collapse:collapse;font-size:.875rem}
+      th{background:#f3f4f6;padding:.5rem .75rem;text-align:left;font-size:.7rem;
+         text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #e5e7eb}
+      td{padding:.6rem .75rem;border-bottom:1px solid #f3f4f6}
+      .gastos-list{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .5rem;list-style:none;
+         font-size:.8125rem;color:#374151;padding:0;margin:.5rem 0}
+      @media print{body{padding:1rem}}
+    </style></head><body>
+    <h1>Punto de Equilibrio — Makyta Sushi</h1>
+    <div class="sub">Generado el ${fecha}</div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-label">Gastos fijos/mes</div><div class="kpi-value red">${clp(gastos)}</div></div>
+      <div class="kpi"><div class="kpi-label">Ventas mínimas</div><div class="kpi-value">${clp(ventasMin)}</div></div>
+      <div class="kpi"><div class="kpi-label">Rolls/mes</div><div class="kpi-value">${rollsMes}</div></div>
+      <div class="kpi"><div class="kpi-label">Rolls/día</div><div class="kpi-value red">${rollsDia}</div></div>
+    </div>
+
+    ${actual > 0 ? `<h2>Progreso del mes</h2>
+    <div style="display:flex;justify-content:space-between;font-size:.875rem;margin-bottom:.25rem">
+      <span>Ventas actuales: <strong>${clp(actual)}</strong></span>
+      <strong>${pct.toFixed(1)}%</strong>
+    </div>
+    <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
+
+    <h2>Variables</h2>
+    <p style="font-size:.875rem;color:#374151">
+      Ticket promedio: <strong>${clp(ticket)}</strong> &nbsp;·&nbsp;
+      Margen promedio: <strong>${margen.toFixed(1)}%</strong>
+    </p>
+
+    <h2>Escenarios</h2>
+    <table><thead><tr>
+      <th>Escenario</th><th>Ticket</th><th>Margen</th>
+      <th>Ventas mínimas/mes</th><th>Rolls/día</th>
+    </tr></thead><tbody>${scRows}</tbody></table>
+
+    <h2>Detalle de Gastos Fijos</h2>
+    <ul class="gastos-list">${gastosList}</ul>
+
+    <script>setTimeout(()=>window.print(),300)<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+(function initEquilibrio() {
+  // Espera que los otros módulos hayan cargado su data
+  setTimeout(calcEquilibrio, 50);
+})();
+
+</script>
+
+<!-- ========================================================
+     PART 6 — SINCRONIZACIÓN GOOGLE SHEETS
+======================================================== -->
+<script>
+
+let SHEETS_URL = localStorage.getItem('makyta_sheets_url') ||
+  'https://script.google.com/macros/s/AKfycbwQq2nCJasLqu3PH9DwZ1QXBM1jUalO6hJpYkdTFgVEkFzH57D8BEcxOIodt8TmAnxRgw/exec';
+
+/* ── Inyectar modal de configuración en el DOM ──────────── */
+(function injectSettingsUI() {
+  // Botón ⚙ junto al sync
+  const syncBtn = document.getElementById('syncBtn');
+  const gear    = document.createElement('button');
+  gear.className   = 'btn btn-ghost btn-icon';
+  gear.title       = 'Configurar sincronización';
+  gear.style.marginLeft = '.25rem';
+  gear.innerHTML   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    style="width:16px;height:16px">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83
+      0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4
+      0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0
+      01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0
+      010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0
+      012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0
+      014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0
+      012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0
+      010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+  </svg>`;
+  gear.onclick = () => openSettingsModal();
+  syncBtn.insertAdjacentElement('afterend', gear);
+
+  // Modal de configuración
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id        = 'settingsModal';
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('settingsModal'); });
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Configurar Google Sheets</h2>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('settingsModal')" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            style="width:16px;height:16px">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="hint-box info" style="margin-bottom:1rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="width:16px;height:16px;flex-shrink:0;margin-top:.125rem">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p>Necesitas desplegar el archivo <strong>Code.gs</strong> como Apps Script.
+          Sigue las instrucciones dentro del archivo para obtener la URL.</p>
+        </div>
+        <div class="form-group" style="margin-bottom:.75rem">
+          <label class="form-label">URL del Apps Script <em>(termina en /exec)</em></label>
+          <div style="display:flex;gap:.5rem;align-items:flex-start">
+            <input type="url" class="form-input" id="settingsUrl" readonly
+              style="background:var(--gray-50);cursor:default;flex:1"
+              placeholder="https://script.google.com/macros/s/…/exec">
+            <button id="urlLockBtn" type="button" class="btn btn-secondary btn-sm"
+              style="flex-shrink:0;white-space:nowrap" onclick="unlockUrlField()">
+              🔒 Modificar
+            </button>
+          </div>
+          <span class="form-hint">Protegida contra cambios accidentales.</span>
+        </div>
+        <div id="settingsSyncInfo"
+          style="font-size:.8125rem;color:var(--gray-500);padding:.5rem 0"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="disconnectSheets()">Desconectar</button>
+        <button class="btn btn-primary"   onclick="saveAndSync()">Guardar y sincronizar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+})();
+
+/* ── Abrir modal con estado actual ──────────────────────── */
+function openSettingsModal() {
+  document.getElementById('settingsUrl').value = SHEETS_URL;
+  refreshSyncInfo();
+  openModal('settingsModal');
+}
+
+function refreshSyncInfo() {
+  const el   = document.getElementById('settingsSyncInfo');
+  if (!el) return;
+  const last = localStorage.getItem('makyta_last_sync');
+  if (SHEETS_URL && last) {
+    el.textContent = '✅ Última sincronización: ' +
+      new Date(last).toLocaleString('es-CL', { dateStyle:'medium', timeStyle:'short' });
+  } else if (SHEETS_URL) {
+    el.textContent = '⚠️ URL configurada pero nunca sincronizado.';
+  } else {
+    el.textContent = 'Sin configurar — los datos solo se guardan en este dispositivo.';
+  }
+}
+
+/* ── Guardar URL y sincronizar ──────────────────────────── */
+function saveAndSync() {
+  const url = document.getElementById('settingsUrl').value.trim();
+  if (!url) return showToast('⚠️ Ingresa la URL del Apps Script', 'error');
+  if (!url.includes('script.google.com'))
+    return showToast('⚠️ La URL debe ser de script.google.com', 'error');
+  SHEETS_URL = url;
+  localStorage.setItem('makyta_sheets_url', url);
+  closeModal('settingsModal');
+  syncData();
+}
+
+/* ── Desconectar ────────────────────────────────────────── */
+function disconnectSheets() {
+  if (!confirm('¿Desconectar Google Sheets?\nLos datos locales no se borrarán.')) return;
+  SHEETS_URL = '';
+  localStorage.removeItem('makyta_sheets_url');
+  localStorage.removeItem('makyta_last_sync');
+  ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal']
+    .forEach(k => localStorage.removeItem(k + '_ts'));
+  setSyncState('offline');
+  closeModal('settingsModal');
+  showToast('Desconectado de Google Sheets', 'info');
+}
+
+/* ── Estado visual del botón sync ───────────────────────── */
+function setSyncState(state) {
+  const dot  = document.getElementById('syncDot');
+  const icon = document.getElementById('syncIcon');
+  const lbl  = document.getElementById('syncLabel');
+  const dotMap = { syncing:'syncing', error:'error', offline:'offline' };
+  dot.className = 'sync-dot' + (dotMap[state] ? ' ' + dotMap[state] : '');
+  icon.classList.toggle('spin', state === 'syncing');
+  const lblMap = {
+    syncing: 'Sincronizando…',
+    error:   'Error — reintentar',
+    offline: 'Sin conexión',
+    ok:      'Sincronizar',
+  };
+  lbl.textContent = lblMap[state] || 'Sincronizar';
+}
+
+/* ── PUSH: enviar datos locales a Sheets ────────────────── */
+async function syncData() {
+  if (!SHEETS_URL) { openSettingsModal(); return; }
+
+  setSyncState('syncing');
+  try {
+    const payload = {
+      action:          'saveAll',
+      makyta_insumos:  getInsumos()  || DEFAULTS_INSUMOS,
+      makyta_recetas:  getRecetas()  || DEFAULTS_RECETAS,
+      makyta_gastos:   getGastos()   || DEFAULTS_GASTOS,
+      makyta_personal: getPersonal() || [],
+    };
+
+    const res  = await fetch(SHEETS_URL, {
+      method:   'POST',
+      headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
+      body:     JSON.stringify(payload),
+      redirect: 'follow',
+    });
+
+    const json = await res.json().catch(() => ({ ok:false, error:'Respuesta inesperada del servidor' }));
+    if (!json.ok) throw new Error(json.error || 'Error del servidor');
+
+    const now = new Date().toISOString();
+    localStorage.setItem('makyta_last_sync', now);
+    ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal']
+      .forEach(k => localStorage.setItem(k + '_ts', now));
+
+    setSyncState('ok');
+    refreshSyncInfo();
+    showToast('✅ Sincronizado con Google Sheets');
+
+  } catch (err) {
+    setSyncState('error');
+    showToast('❌ No se pudo sincronizar. Verifica la URL.', 'error');
+    console.error('[Makyta Sync]', err);
+    setTimeout(() => setSyncState('ok'), 5000);
+  }
+}
+
+/* ── PULL: cargar desde Sheets al abrir la app ──────────── */
+async function loadFromSheets() {
+  if (!SHEETS_URL) return;
+  setSyncState('syncing');
+  try {
+    const res  = await fetch(SHEETS_URL + '?action=load', { redirect:'follow' });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+
+    const keys    = ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal'];
+    let   updated = false;
+
+    keys.forEach(key => {
+      const remote = json.data?.[key];
+      if (!remote?.value) return;
+      const localTs  = localStorage.getItem(key + '_ts') || '0';
+      const remoteTs = remote.ts || '0';
+      if (remoteTs > localTs) {
+        localStorage.setItem(key, JSON.stringify(remote.value));
+        localStorage.setItem(key + '_ts', remoteTs);
+        updated = true;
+      }
+    });
+
+    setSyncState('ok');
+
+    if (updated) {
+      renderInsumos();
+      renderRecetas();
+      renderGastos();
+      renderPersonal();
+      calcEquilibrio();
+      showToast('✅ Datos actualizados desde Google Sheets');
+    }
+
+  } catch (err) {
+    setSyncState(SHEETS_URL ? 'offline' : 'ok');
+    console.warn('[Makyta] No se pudo conectar con Sheets:', err.message);
+  }
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+(function initSync() {
+  if (SHEETS_URL) {
+    setSyncState('ok');
+    loadFromSheets();
+  }
+  refreshSyncInfo();
+})();
+
+</script>
+
+<!-- ========================================================
+     PART 7 — CONTRASEÑA + AUTO-SYNC + PROTECCIÓN URL
+======================================================== -->
+<style>
+  @keyframes pinShake {
+    0%,100%{ transform:translateX(0) }
+    20%    { transform:translateX(-10px) }
+    40%    { transform:translateX(10px) }
+    60%    { transform:translateX(-6px) }
+    80%    { transform:translateX(6px) }
+  }
+</style>
+<script>
+
+/* ── 1. Contraseña ──────────────────────────────────────── */
+function checkPin(input) {
+  if (input.value.length < 4) return;
+
+  if (input.value === '1206') {
+    input.style.borderColor   = '#16a34a';
+    input.style.background    = '#f0fdf4';
+    sessionStorage.setItem('makyta_auth', '1');
+    setTimeout(() => {
+      const ls = document.getElementById('lockScreen');
+      if (!ls) return;
+      ls.style.transition = 'opacity .3s ease';
+      ls.style.opacity    = '0';
+      setTimeout(() => ls.remove(), 320);
+    }, 250);
+  } else {
+    const errEl = document.getElementById('pinError');
+    input.style.borderColor = '#dc2626';
+    input.style.animation   = 'pinShake .4s ease';
+    errEl.textContent       = 'Contraseña incorrecta';
+    setTimeout(() => {
+      input.value           = '';
+      input.style.animation = '';
+      input.style.borderColor = '#e5e7eb';
+      errEl.textContent     = '';
+      input.focus();
+    }, 1000);
+  }
+}
+
+/* Foco automático al cargar si la pantalla está visible */
+window.addEventListener('load', () => {
+  const ls = document.getElementById('lockScreen');
+  if (ls && ls.style.display !== 'none') {
+    document.getElementById('pinInput')?.focus();
+  }
+});
+
+/* ── 2. Auto-sync con debounce ──────────────────────────── */
+let _autoSyncTimer = null;
+
+function scheduleSync() {
+  if (!SHEETS_URL) return;
+  clearTimeout(_autoSyncTimer);
+  // Indicador visual "pendiente"
+  const lbl = document.getElementById('syncLabel');
+  if (lbl) lbl.textContent = 'Guardando…';
+  _autoSyncTimer = setTimeout(() => syncData(), 2500);
+}
+
+/* Envolver los setters para disparar auto-sync en cada cambio */
+(function wrapSetters() {
+  ['setInsumos', 'setRecetas', 'setGastos', 'setPersonal'].forEach(name => {
+    const orig = window[name];
+    if (!orig) return;
+    window[name] = function(d) {
+      orig(d);
+      scheduleSync();
+    };
+  });
+})();
+
+/* ── 3. Protección URL — re-bloquear al abrir el modal ──── */
+const _origOpenSettings = openSettingsModal;
+openSettingsModal = function() {
+  _origOpenSettings();
+  const input  = document.getElementById('settingsUrl');
+  const lockBtn = document.getElementById('urlLockBtn');
+  if (input) {
+    input.setAttribute('readonly', '');
+    input.style.background = 'var(--gray-50)';
+    input.style.cursor     = 'default';
+  }
+  if (lockBtn) lockBtn.style.display = '';
+};
+
+function unlockUrlField() {
+  if (!confirm('¿Modificar la URL del Apps Script?\n\nCambiarla incorrectamente desconectará la sincronización.')) return;
+  const input   = document.getElementById('settingsUrl');
+  const lockBtn = document.getElementById('urlLockBtn');
+  if (input) {
+    input.removeAttribute('readonly');
+    input.style.background = '';
+    input.style.cursor     = '';
+    input.focus();
+  }
+  if (lockBtn) lockBtn.style.display = 'none';
+}
+
+</script>
+</body>
+</html>
