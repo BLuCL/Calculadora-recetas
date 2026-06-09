@@ -1119,6 +1119,11 @@ tfoot td {
         <p class="page-subtitle">Ingredientes y costo por unidad</p>
       </div>
       <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importInsumoFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="15"/></svg>
+          Importar CSV
+        </button>
+        <input type="file" id="importInsumoFile" accept=".csv" style="display:none" onchange="importInsumos(this)">
         <button class="btn btn-secondary btn-sm" onclick="exportInsumos()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar CSV
@@ -1150,6 +1155,8 @@ tfoot td {
       </div>
     </div>
 
+    <div id="insumosCatFilter" style="display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:.875rem"></div>
+
     <div class="card">
       <div class="card-header">
         <span class="card-title">Lista de ingredientes</span>
@@ -1163,6 +1170,7 @@ tfoot td {
           <thead>
             <tr>
               <th>Insumo</th>
+              <th>Categoría</th>
               <th>Precio compra</th>
               <th>Cantidad</th>
               <th>Costo / unidad</th>
@@ -1188,6 +1196,15 @@ tfoot td {
         <p class="page-subtitle">Costo y rentabilidad de cada roll</p>
       </div>
       <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="exportRecetasCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importRecetaFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="15"/></svg>
+          Importar CSV
+        </button>
+        <input type="file" id="importRecetaFile" accept=".csv" style="display:none" onchange="importRecetas(this)">
         <button class="btn btn-secondary btn-sm" onclick="exportRecetas()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Reporte PDF
@@ -1217,6 +1234,8 @@ tfoot td {
         <div class="stat-value sm red" id="st-roll-caro">—</div>
       </div>
     </div>
+
+    <div id="recetasCatFilter" style="display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:.875rem"></div>
 
     <div class="recipe-grid" id="recetasGrid">
       <!-- filled by JS -->
@@ -1542,6 +1561,19 @@ tfoot td {
       <input type="hidden" id="insumoEditId">
       <div class="form-grid form-grid-2">
         <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Categoría</label>
+          <input type="text" class="form-input" id="insumoCategoria" list="categoriasInsumosList" placeholder="Ej: Pescados y mariscos">
+          <datalist id="categoriasInsumosList">
+            <option value="Cereales">
+            <option value="Pescados y mariscos">
+            <option value="Verduras">
+            <option value="Lácteos">
+            <option value="Salsas">
+            <option value="Especias">
+            <option value="Otros">
+          </datalist>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
           <label class="form-label">Nombre del insumo</label>
           <input type="text" class="form-input" id="insumoNombre" placeholder="Ej: Salmón fresco">
         </div>
@@ -1594,6 +1626,17 @@ tfoot td {
         <div class="form-group">
           <label class="form-label">Nombre del roll</label>
           <input type="text" class="form-input" id="recetaNombre" placeholder="Ej: Roll Volcán">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría</label>
+          <input type="text" class="form-input" id="recetaCategoria" list="categoriasRecetasList" placeholder="Ej: Rolls">
+          <datalist id="categoriasRecetasList">
+            <option value="Rolls">
+            <option value="Entradas">
+            <option value="Bebidas">
+            <option value="Postres">
+            <option value="Otros">
+          </datalist>
         </div>
         <div class="form-group">
           <label class="form-label">Precio de venta <em>($)</em></label>
@@ -1819,6 +1862,11 @@ function addGastoRow()      {}
 function calcEquilibrio()   {}
 function exportInsumos()    { showToast('⏳ Disponible en la Parte 5', 'info'); }
 function exportRecetas()    { showToast('⏳ Disponible en la Parte 5', 'info'); }
+function exportRecetasCSV() { showToast('⏳ Disponible en la Parte 5', 'info'); }
+function importInsumos()    {}
+function importRecetas()    {}
+function renderCatFilter()  {}
+function renderRecCatFilter(){}
 function exportGastos()     { showToast('⏳ Disponible en la Parte 5', 'info'); }
 function exportEquilibrio() { showToast('⏳ Disponible en la Parte 5', 'info'); }
 
@@ -2026,11 +2074,12 @@ function calcCostoUnitario() {
 
 /* ── Guardar insumo ─────────────────────────────────────── */
 function saveInsumo() {
-  const nombre   = document.getElementById('insumoNombre').value.trim();
-  const precio   = parseInputVal('insumoPrecio');
-  const cantidad = parseFloat(document.getElementById('insumoCantidad').value);
-  const unidad   = document.getElementById('insumoUnidad').value;
-  const editId   = document.getElementById('insumoEditId').value;
+  const nombre    = document.getElementById('insumoNombre').value.trim();
+  const categoria = document.getElementById('insumoCategoria').value.trim();
+  const precio    = parseInputVal('insumoPrecio');
+  const cantidad  = parseFloat(document.getElementById('insumoCantidad').value);
+  const unidad    = document.getElementById('insumoUnidad').value;
+  const editId    = document.getElementById('insumoEditId').value;
 
   if (!nombre)                       return showToast('⚠️ Ingresa el nombre del insumo', 'error');
   if (precio < 0)                    return showToast('⚠️ Precio inválido', 'error');
@@ -2043,9 +2092,9 @@ function saveInsumo() {
 
   if (editId) {
     const idx = insumos.findIndex(i => i.id === editId);
-    if (idx >= 0) insumos[idx] = { ...insumos[idx], nombre, precio, cantidad, unidad, updatedAt: now };
+    if (idx >= 0) insumos[idx] = { ...insumos[idx], nombre, categoria, precio, cantidad, unidad, updatedAt: now };
   } else {
-    insumos.push({ id: uid(), nombre, precio, cantidad, unidad, updatedAt: now });
+    insumos.push({ id: uid(), nombre, categoria, precio, cantidad, unidad, updatedAt: now });
   }
 
   setInsumos(insumos);
@@ -2077,13 +2126,64 @@ function deleteInsumo(id) {
 /* ── Exportar CSV ───────────────────────────────────────── */
 function exportInsumos() {
   const insumos = getInsumos() || DEFAULTS_INSUMOS;
-  const header  = ['Insumo','Precio compra ($)','Cantidad','Unidad','Costo por unidad ($)'];
+  const header  = ['Insumo','Categoria','Precio compra ($)','Cantidad','Unidad','Costo por unidad ($)'];
   const rows    = insumos.map(i => [
-    i.nombre, i.precio, i.cantidad, i.unidad,
+    i.nombre, i.categoria || '', i.precio, i.cantidad, i.unidad,
     costoUnitario(i).toFixed(2)
   ]);
   downloadCSV('insumos_makyta.csv', [header, ...rows]);
   showToast('✅ CSV descargado');
+}
+
+/* ── Importar CSV ───────────────────────────────────────── */
+function importInsumos(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text  = e.target.result.replace(/^﻿/, ''); // strip BOM
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) return showToast('⚠️ El archivo está vacío', 'error');
+
+      // Skip header line
+      const rows = lines.slice(1);
+      let insumos = getInsumos();
+      if (!insumos) insumos = DEFAULTS_INSUMOS.map(i => ({...i}));
+
+      let added = 0, updated = 0;
+      rows.forEach(row => {
+        // Parse CSV row (handles quoted fields)
+        const cols     = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        const nombre   = cols[0];
+        const categoria = cols[1] || '';
+        const precio   = parseFloat(cols[2]);
+        const cantidad = parseFloat(cols[3]);
+        const unidad   = cols[4] || 'g';
+
+        if (!nombre || isNaN(precio) || isNaN(cantidad) || cantidad <= 0) return;
+
+        const existing = insumos.find(i => i.nombre.toLowerCase() === nombre.toLowerCase());
+        const now = new Date().toISOString();
+        if (existing) {
+          Object.assign(existing, { precio, cantidad, unidad, categoria, updatedAt: now });
+          updated++;
+        } else {
+          insumos.push({ id: uid(), nombre, precio, cantidad, unidad, categoria, updatedAt: now });
+          added++;
+        }
+      });
+
+      setInsumos(insumos);
+      renderInsumos();
+      if (typeof renderRecetas === 'function') renderRecetas();
+      showToast('✅ ' + added + ' agregados, ' + updated + ' actualizados');
+    } catch(err) {
+      showToast('⚠️ Error al leer el archivo', 'error');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
 /* ── Init ───────────────────────────────────────────────── */
@@ -2116,7 +2216,7 @@ function setRecetas(data) {
 /* ── Recetas precargadas ────────────────────────────────── */
 const DEFAULTS_RECETAS = [
   {
-    id:'rec-1', nombre:'Roll Filadelfia', precio:5500,
+    id:'rec-1', nombre:'Roll Filadelfia', precio:5500, categoria:'Rolls',
     ingredientes:[
       { insumoId:'ins-1', cantidad:120 },
       { insumoId:'ins-2', cantidad:1   },
@@ -2127,7 +2227,7 @@ const DEFAULTS_RECETAS = [
     ]
   },
   {
-    id:'rec-2', nombre:'Roll California', precio:4800,
+    id:'rec-2', nombre:'Roll California', precio:4800, categoria:'Rolls',
     ingredientes:[
       { insumoId:'ins-1',  cantidad:120 },
       { insumoId:'ins-2',  cantidad:1   },
@@ -2139,7 +2239,7 @@ const DEFAULTS_RECETAS = [
     ]
   },
   {
-    id:'rec-3', nombre:'Roll Volcán Salmón', precio:6200,
+    id:'rec-3', nombre:'Roll Volcán Salmón', precio:6200, categoria:'Rolls',
     ingredientes:[
       { insumoId:'ins-1', cantidad:130 },
       { insumoId:'ins-2', cantidad:1   },
@@ -2168,18 +2268,23 @@ function semaforoData(pctCosto) {
 }
 
 /* ── Render cards ───────────────────────────────────────── */
+let _recetaCategoria = '';
+
 function renderRecetas() {
-  const all     = (getRecetas() || DEFAULTS_RECETAS).slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const allRecetas = getRecetas() || DEFAULTS_RECETAS;
+  let all = allRecetas.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  if (_recetaCategoria) all = all.filter(r => (r.categoria || '') === _recetaCategoria);
   const insumos = getInsumos()  || DEFAULTS_INSUMOS;
   const grid    = document.getElementById('recetasGrid');
 
   if (!all.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 0111.18 0A4 4 0 0118 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
-      <div class="empty-title">Sin recetas</div>
-      <div class="empty-text">Crea tu primer roll.</div>
+      <div class="empty-title">${_recetaCategoria ? 'Sin resultados' : 'Sin recetas'}</div>
+      <div class="empty-text">${_recetaCategoria ? 'Prueba otra categoría.' : 'Crea tu primer roll.'}</div>
     </div>`;
-    updateRecetaStats(all, insumos);
+    updateRecetaStats(allRecetas, insumos);
+    renderRecCatFilter();
     return;
   }
 
@@ -2205,6 +2310,7 @@ function renderRecetas() {
           <div class="semaphore ${sem.cls}" style="margin-top:.3rem">
             <div class="semaphore-dot"></div>${sem.emoji} ${sem.label}
           </div>
+          <span class="badge badge-gray" style="margin-top:.25rem">${esc(rec.categoria || 'Sin categoría')}</span>
         </div>
         <div class="recipe-price">${clp(rec.precio)}</div>
       </div>
@@ -2244,7 +2350,22 @@ function renderRecetas() {
     </div>`;
   }).join('');
 
-  updateRecetaStats(all, insumos);
+  updateRecetaStats(allRecetas, insumos);
+  renderRecCatFilter();
+}
+
+/* ── Filtro por categoría de recetas ────────────────────── */
+function renderRecCatFilter() {
+  const container = document.getElementById('recetasCatFilter');
+  if (!container) return;
+  const all  = getRecetas() || DEFAULTS_RECETAS;
+  const cats = [...new Set(all.map(r => r.categoria || 'Sin categoría'))].sort((a, b) => a.localeCompare(b, 'es'));
+
+  const pills = [{ label:'Todos', value:'' }, ...cats.map(c => ({ label:c, value:c }))];
+  container.innerHTML = pills.map(p => {
+    const active = p.value === _recetaCategoria ? ' active' : '';
+    return `<button class="sub-tab${active}" onclick="_recetaCategoria='${p.value.replace(/'/g,"\\'")}';renderRecetas()">${esc(p.label)}</button>`;
+  }).join('');
 }
 
 /* ── Stats ──────────────────────────────────────────────── */
@@ -2374,9 +2495,10 @@ function calcRecetaLive() {
 /* ── Modal: abrir nuevo ─────────────────────────────────── */
 function openRecetaModal() {
   document.getElementById('recetaModalTitle').textContent = 'Nueva receta';
-  document.getElementById('recetaEditId').value  = '';
-  document.getElementById('recetaNombre').value  = '';
-  document.getElementById('recetaPrecio').value  = '';
+  document.getElementById('recetaEditId').value    = '';
+  document.getElementById('recetaNombre').value    = '';
+  document.getElementById('recetaCategoria').value = '';
+  document.getElementById('recetaPrecio').value    = '';
   document.getElementById('ingredienteRows').innerHTML = '';
   document.getElementById('recetaCostoTotal').textContent = '$0';
   document.getElementById('recetaSemaforo').textContent   = '—';
@@ -2391,9 +2513,10 @@ function editReceta(id) {
   const rec = (getRecetas() || DEFAULTS_RECETAS).find(r => r.id === id);
   if (!rec) return;
   document.getElementById('recetaModalTitle').textContent = 'Editar receta';
-  document.getElementById('recetaEditId').value  = id;
-  document.getElementById('recetaNombre').value  = rec.nombre;
-  document.getElementById('recetaPrecio').value  = fmtVal(rec.precio);
+  document.getElementById('recetaEditId').value    = id;
+  document.getElementById('recetaNombre').value    = rec.nombre;
+  document.getElementById('recetaCategoria').value = rec.categoria || '';
+  document.getElementById('recetaPrecio').value    = fmtVal(rec.precio);
   document.getElementById('ingredienteRows').innerHTML = '';
   rec.ingredientes.forEach(ing => addIngredienteRow(ing));
   calcRecetaLive();
@@ -2403,9 +2526,10 @@ function editReceta(id) {
 
 /* ── Guardar ────────────────────────────────────────────── */
 function saveReceta() {
-  const nombre = document.getElementById('recetaNombre').value.trim();
-  const precio = parseInputVal('recetaPrecio');
-  const editId = document.getElementById('recetaEditId').value;
+  const nombre    = document.getElementById('recetaNombre').value.trim();
+  const categoria = document.getElementById('recetaCategoria').value.trim();
+  const precio    = parseInputVal('recetaPrecio');
+  const editId    = document.getElementById('recetaEditId').value;
 
   if (!nombre)        return showToast('⚠️ Ingresa el nombre del roll', 'error');
   if (precio <= 0)    return showToast('⚠️ Precio de venta inválido', 'error');
@@ -2435,9 +2559,9 @@ function saveReceta() {
   const now = new Date().toISOString();
   if (editId) {
     const idx = recetas.findIndex(r => r.id === editId);
-    if (idx >= 0) recetas[idx] = { ...recetas[idx], nombre, precio, ingredientes, updatedAt:now };
+    if (idx >= 0) recetas[idx] = { ...recetas[idx], nombre, categoria, precio, ingredientes, updatedAt:now };
   } else {
-    recetas.push({ id: uid(), nombre, precio, ingredientes, updatedAt:now });
+    recetas.push({ id: uid(), nombre, categoria, precio, ingredientes, updatedAt:now });
   }
 
   setRecetas(recetas);
@@ -2529,6 +2653,85 @@ function exportRecetas() {
     <script>setTimeout(()=>window.print(),300)<\/script>
   </body></html>`);
   win.document.close();
+}
+
+/* ── Exportar CSV recetas ───────────────────────────────── */
+function exportRecetasCSV() {
+  const all     = getRecetas() || DEFAULTS_RECETAS;
+  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const header  = ['Roll','Categoria','Precio venta ($)','Ingrediente','Cantidad','Unidad'];
+  const rows    = [];
+  all.forEach(rec => {
+    if (!rec.ingredientes.length) {
+      rows.push([rec.nombre, rec.categoria || '', rec.precio, '', '', '']);
+    } else {
+      rec.ingredientes.forEach(ing => {
+        const ins = insumos.find(i => i.id === ing.insumoId);
+        rows.push([rec.nombre, rec.categoria || '', rec.precio,
+          ins ? ins.nombre : '', ing.cantidad, ins ? ins.unidad : '']);
+      });
+    }
+  });
+  downloadCSV('recetas_makyta.csv', [header, ...rows]);
+  showToast('✅ CSV de recetas descargado');
+}
+
+/* ── Importar CSV recetas ───────────────────────────────── */
+function importRecetas(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text  = e.target.result.replace(/^﻿/, '');
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean).slice(1);
+      if (!lines.length) return showToast('⚠️ El archivo está vacío', 'error');
+
+      const insumos  = getInsumos() || DEFAULTS_INSUMOS;
+      let recetas    = getRecetas();
+      if (!recetas) recetas = DEFAULTS_RECETAS.map(r => ({...r, ingredientes: r.ingredientes.map(i=>({...i}))}));
+
+      // Agrupar filas por nombre de roll
+      const map = {};
+      lines.forEach(row => {
+        const cols      = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        const nombre    = cols[0];
+        const categoria = cols[1] || '';
+        const precio    = parseFloat(cols[2]);
+        const ingNombre = cols[3];
+        const cantidad  = parseFloat(cols[4]);
+
+        if (!nombre || isNaN(precio)) return;
+        if (!map[nombre]) map[nombre] = { nombre, categoria, precio, ingredientes: [] };
+        if (ingNombre && !isNaN(cantidad) && cantidad > 0) {
+          const ins = insumos.find(i => i.nombre.toLowerCase() === ingNombre.toLowerCase());
+          if (ins) map[nombre].ingredientes.push({ insumoId: ins.id, cantidad });
+        }
+      });
+
+      let added = 0, updated = 0;
+      const now = new Date().toISOString();
+      Object.values(map).forEach(data => {
+        const existing = recetas.find(r => r.nombre.toLowerCase() === data.nombre.toLowerCase());
+        if (existing) {
+          Object.assign(existing, { ...data, updatedAt: now });
+          updated++;
+        } else {
+          recetas.push({ id: uid(), ...data, updatedAt: now });
+          added++;
+        }
+      });
+
+      setRecetas(recetas);
+      renderRecetas();
+      if (typeof calcEquilibrio === 'function') calcEquilibrio();
+      showToast('✅ ' + added + ' recetas agregadas, ' + updated + ' actualizadas');
+    } catch(err) {
+      showToast('⚠️ Error al leer el archivo', 'error');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
 /* ── Init ───────────────────────────────────────────────── */
