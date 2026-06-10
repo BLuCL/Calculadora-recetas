@@ -2245,7 +2245,7 @@ function renderCatRecetasList() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
         </button>
       </div>
-      <div id="cat-edit-btns-${idx}" class="hidden" style="display:none;gap:.25rem">
+      <div id="cat-edit-btns-${idx}" class="hidden" style="display:flex;gap:.25rem">
         <button class="btn btn-primary btn-sm" onclick="guardarEditCat(${idx})">Guardar</button>
         <button class="btn btn-secondary btn-sm" onclick="cancelarEditCat(${idx})">Cancelar</button>
       </div>
@@ -2255,8 +2255,8 @@ function renderCatRecetasList() {
 function iniciarEditCat(idx) {
   document.getElementById(`cat-label-${idx}`).classList.add('hidden');
   document.getElementById(`cat-input-${idx}`).classList.remove('hidden');
-  document.getElementById(`cat-btns-${idx}`).style.display = 'none';
-  document.getElementById(`cat-edit-btns-${idx}`).style.display = 'flex';
+  document.getElementById(`cat-btns-${idx}`).classList.add('hidden');
+  document.getElementById(`cat-edit-btns-${idx}`).classList.remove('hidden');
   setTimeout(() => document.getElementById(`cat-input-${idx}`).focus(), 50);
 }
 
@@ -2265,8 +2265,8 @@ function cancelarEditCat(idx) {
   document.getElementById(`cat-input-${idx}`).value = cats[idx] || '';
   document.getElementById(`cat-label-${idx}`).classList.remove('hidden');
   document.getElementById(`cat-input-${idx}`).classList.add('hidden');
-  document.getElementById(`cat-btns-${idx}`).style.display = 'flex';
-  document.getElementById(`cat-edit-btns-${idx}`).style.display = 'none';
+  document.getElementById(`cat-btns-${idx}`).classList.remove('hidden');
+  document.getElementById(`cat-edit-btns-${idx}`).classList.add('hidden');
 }
 
 function guardarEditCat(idx) {
