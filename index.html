@@ -1505,6 +1505,20 @@ tfoot td {
       <p>Los días operativos se usan en el <strong>Punto de Equilibrio</strong> para calcular cuánto necesitas vender por día hábil — no por día del mes.</p>
     </div>
 
+    <div class="card mt-4">
+      <div class="card-header"><span class="card-title">Categorías de recetas</span></div>
+      <div class="card-body">
+        <p class="text-sm text-muted mb-3">Administra las categorías que aparecen al crear o editar una receta</p>
+        <div id="catRecetasList"></div>
+        <div style="display:flex;gap:.5rem;margin-top:.75rem;align-items:center">
+          <input type="text" class="form-input" id="catNuevaInput"
+            placeholder="Nueva categoría…" style="flex:1"
+            onkeydown="if(event.key==='Enter')agregarCatReceta()">
+          <button class="btn btn-primary btn-sm" onclick="agregarCatReceta()">Agregar</button>
+        </div>
+      </div>
+    </div>
+
   </section>
 
 </main>
@@ -1739,6 +1753,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'config') renderCatRecetasList();
 }
 
 /* ── Sub-tab (Gastos / Personal) ────────────────────────── */
@@ -2205,6 +2220,108 @@ function onCatChange(sel) {
   buildCatSelect(trimmed);
   renderRecCatFilter();
   showToast(`Categoría "${trimmed}" creada`, 'success');
+}
+
+/* ── Gestión de categorías (panel Config) ───────────────── */
+function renderCatRecetasList() {
+  const container = document.getElementById('catRecetasList');
+  if (!container) return;
+  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  if (cats.length === 0) {
+    container.innerHTML = '<p class="text-sm text-muted">Sin categorías definidas.</p>';
+    return;
+  }
+  container.innerHTML = cats.map((cat, idx) => `
+    <div id="cat-row-${idx}" style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--gray-100)">
+      <span style="flex:1;font-size:.9rem" id="cat-label-${idx}">${esc(cat)}</span>
+      <input type="text" class="form-input hidden" id="cat-input-${idx}" value="${esc(cat)}"
+        style="flex:1;padding:.25rem .5rem;font-size:.9rem"
+        onkeydown="if(event.key==='Enter')guardarEditCat(${idx});if(event.key==='Escape')cancelarEditCat(${idx})">
+      <div id="cat-btns-${idx}" style="display:flex;gap:.25rem">
+        <button class="btn btn-ghost btn-icon" title="Editar" onclick="iniciarEditCat(${idx})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon danger" title="Eliminar" onclick="borrarCatReceta(${idx})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+      <div id="cat-edit-btns-${idx}" class="hidden" style="display:none;gap:.25rem">
+        <button class="btn btn-primary btn-sm" onclick="guardarEditCat(${idx})">Guardar</button>
+        <button class="btn btn-secondary btn-sm" onclick="cancelarEditCat(${idx})">Cancelar</button>
+      </div>
+    </div>`).join('');
+}
+
+function iniciarEditCat(idx) {
+  document.getElementById(`cat-label-${idx}`).classList.add('hidden');
+  document.getElementById(`cat-input-${idx}`).classList.remove('hidden');
+  document.getElementById(`cat-btns-${idx}`).style.display = 'none';
+  document.getElementById(`cat-edit-btns-${idx}`).style.display = 'flex';
+  setTimeout(() => document.getElementById(`cat-input-${idx}`).focus(), 50);
+}
+
+function cancelarEditCat(idx) {
+  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  document.getElementById(`cat-input-${idx}`).value = cats[idx] || '';
+  document.getElementById(`cat-label-${idx}`).classList.remove('hidden');
+  document.getElementById(`cat-input-${idx}`).classList.add('hidden');
+  document.getElementById(`cat-btns-${idx}`).style.display = 'flex';
+  document.getElementById(`cat-edit-btns-${idx}`).style.display = 'none';
+}
+
+function guardarEditCat(idx) {
+  const nuevoNombre = document.getElementById(`cat-input-${idx}`).value.trim();
+  if (!nuevoNombre) return showToast('⚠️ El nombre no puede estar vacío', 'error');
+  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const nombreViejo = cats[idx];
+  if (nuevoNombre === nombreViejo) { cancelarEditCat(idx); return; }
+  if (cats.includes(nuevoNombre)) return showToast('⚠️ Ya existe esa categoría', 'error');
+  cats[idx] = nuevoNombre;
+  cats.sort((a, b) => a.localeCompare(b, 'es'));
+  setCatRecetas(cats);
+  const recetas = getRecetas();
+  if (recetas) {
+    recetas.forEach(r => { if (r.categoria === nombreViejo) r.categoria = nuevoNombre; });
+    setRecetas(recetas);
+  }
+  renderCatRecetasList();
+  renderRecCatFilter();
+  showToast(`Categoría renombrada a "${nuevoNombre}"`, 'success');
+}
+
+function agregarCatReceta() {
+  const input = document.getElementById('catNuevaInput');
+  const nombre = input.value.trim();
+  if (!nombre) return showToast('⚠️ Escribe el nombre de la categoría', 'error');
+  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  if (cats.includes(nombre)) return showToast('⚠️ Ya existe esa categoría', 'error');
+  cats.push(nombre);
+  cats.sort((a, b) => a.localeCompare(b, 'es'));
+  setCatRecetas(cats);
+  input.value = '';
+  renderCatRecetasList();
+  renderRecCatFilter();
+  showToast(`Categoría "${nombre}" agregada`, 'success');
+}
+
+function borrarCatReceta(idx) {
+  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const nombre = cats[idx];
+  const recetas = getRecetas() || [];
+  const enUso = recetas.filter(r => r.categoria === nombre).length;
+  const msg = enUso > 0
+    ? `¿Eliminar la categoría "${nombre}"?\nHay ${enUso} receta(s) con esta categoría — quedarán sin categoría.`
+    : `¿Eliminar la categoría "${nombre}"?`;
+  if (!confirm(msg)) return;
+  cats.splice(idx, 1);
+  setCatRecetas(cats);
+  if (enUso > 0) {
+    recetas.forEach(r => { if (r.categoria === nombre) r.categoria = ''; });
+    setRecetas(recetas);
+  }
+  renderCatRecetasList();
+  renderRecCatFilter();
+  showToast(`Categoría "${nombre}" eliminada`, 'success');
 }
 
 /* ── Recetas precargadas ────────────────────────────────── */
@@ -3710,6 +3827,7 @@ function renderConfigStats() {
   document.getElementById('cfg-apertura').value = cfg.apertura;
   document.getElementById('cfg-cierre').value   = cfg.cierre;
   renderConfigStats();
+  renderCatRecetasList();
 })();
 
 /* ── 3. Protección URL — re-bloquear al abrir el modal ──── */
