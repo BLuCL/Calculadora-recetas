@@ -1155,8 +1155,6 @@ tfoot td {
       </div>
     </div>
 
-    <div id="insumosCatFilter" style="display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:.875rem"></div>
-
     <div class="card">
       <div class="card-header">
         <span class="card-title">Lista de ingredientes</span>
@@ -1170,7 +1168,6 @@ tfoot td {
           <thead>
             <tr>
               <th>Insumo</th>
-              <th>Categoría</th>
               <th>Precio compra</th>
               <th>Cantidad</th>
               <th>Costo / unidad</th>
@@ -1561,19 +1558,6 @@ tfoot td {
       <input type="hidden" id="insumoEditId">
       <div class="form-grid form-grid-2">
         <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Categoría</label>
-          <input type="text" class="form-input" id="insumoCategoria" list="categoriasInsumosList" placeholder="Ej: Pescados y mariscos">
-          <datalist id="categoriasInsumosList">
-            <option value="Cereales">
-            <option value="Pescados y mariscos">
-            <option value="Verduras">
-            <option value="Lácteos">
-            <option value="Salsas">
-            <option value="Especias">
-            <option value="Otros">
-          </datalist>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
           <label class="form-label">Nombre del insumo</label>
           <input type="text" class="form-input" id="insumoNombre" placeholder="Ej: Salmón fresco">
         </div>
@@ -1629,14 +1613,7 @@ tfoot td {
         </div>
         <div class="form-group">
           <label class="form-label">Categoría</label>
-          <input type="text" class="form-input" id="recetaCategoria" list="categoriasRecetasList" placeholder="Ej: Rolls">
-          <datalist id="categoriasRecetasList">
-            <option value="Rolls">
-            <option value="Entradas">
-            <option value="Bebidas">
-            <option value="Postres">
-            <option value="Otros">
-          </datalist>
+          <select class="form-input" id="recetaCategoria" onchange="onCatChange(this)"></select>
         </div>
         <div class="form-group">
           <label class="form-label">Precio de venta <em>($)</em></label>
@@ -1865,7 +1842,6 @@ function exportRecetas()    { showToast('⏳ Disponible en la Parte 5', 'info');
 function exportRecetasCSV() { showToast('⏳ Disponible en la Parte 5', 'info'); }
 function importInsumos()    {}
 function importRecetas()    {}
-function renderCatFilter()  {}
 function renderRecCatFilter(){}
 function exportGastos()     { showToast('⏳ Disponible en la Parte 5', 'info'); }
 function exportEquilibrio() { showToast('⏳ Disponible en la Parte 5', 'info'); }
@@ -1942,15 +1918,13 @@ function costoUnitario(ins) {
 }
 
 /* ── Render tabla ───────────────────────────────────────── */
-let _insumoQuery    = '';
-let _insumoCategoria = '';
+let _insumoQuery = '';
 
 function renderInsumos(query) {
   if (query !== undefined) _insumoQuery = query;
   const all = getInsumos() || DEFAULTS_INSUMOS;
   const q   = _insumoQuery.toLowerCase().trim();
   let lista = (q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all);
-  if (_insumoCategoria) lista = lista.filter(i => (i.categoria || '') === _insumoCategoria);
   lista = lista.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   const tbody = document.getElementById('insumosBody');
 
@@ -1958,11 +1932,10 @@ function renderInsumos(query) {
     tbody.innerHTML = `<tr><td colspan="6">
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <div class="empty-title">${q || _insumoCategoria ? 'Sin resultados' : 'Sin insumos'}</div>
-        <div class="empty-text">${q || _insumoCategoria ? 'Prueba otro término de búsqueda.' : 'Agrega tu primer ingrediente.'}</div>
+        <div class="empty-title">${q ? 'Sin resultados' : 'Sin insumos'}</div>
+        <div class="empty-text">${q ? 'Prueba otro término de búsqueda.' : 'Agrega tu primer ingrediente.'}</div>
       </div></td></tr>`;
     updateInsumoStats(all);
-    renderCatFilter();
     return;
   }
 
@@ -1970,7 +1943,6 @@ function renderInsumos(query) {
     const cu = costoUnitario(ins);
     return `<tr>
       <td class="td-main">${esc(ins.nombre)}</td>
-      <td><span class="badge badge-gray">${esc(ins.categoria || 'Sin categoría')}</span></td>
       <td class="td-num">${clp(ins.precio)}</td>
       <td class="td-num">${ins.cantidad.toLocaleString('es-CL')} ${ins.unidad}</td>
       <td class="td-num" style="color:var(--red);font-weight:600">${clp(cu)} / ${ins.unidad}</td>
@@ -1988,21 +1960,6 @@ function renderInsumos(query) {
   }).join('');
 
   updateInsumoStats(all);
-  renderCatFilter();
-}
-
-/* ── Filtro por categoría de insumos ────────────────────── */
-function renderCatFilter() {
-  const container = document.getElementById('insumosCatFilter');
-  if (!container) return;
-  const all  = getInsumos() || DEFAULTS_INSUMOS;
-  const cats = [...new Set(all.map(i => i.categoria || 'Sin categoría'))].sort((a, b) => a.localeCompare(b, 'es'));
-
-  const pills = [{ label:'Todos', value:'' }, ...cats.map(c => ({ label:c, value:c }))];
-  container.innerHTML = pills.map(p => {
-    const active = p.value === _insumoCategoria ? ' active' : '';
-    return `<button class="sub-tab${active}" onclick="_insumoCategoria='${p.value.replace(/'/g,"\\'")}';renderInsumos()">${esc(p.label)}</button>`;
-  }).join('');
 }
 
 /* ── Stats cards ────────────────────────────────────────── */
@@ -2037,7 +1994,6 @@ function filterInsumos(query) {
 function openInsumoModal() {
   document.getElementById('insumoModalTitle').textContent = 'Agregar insumo';
   document.getElementById('insumoEditId').value      = '';
-  document.getElementById('insumoCategoria').value   = '';
   document.getElementById('insumoNombre').value      = '';
   document.getElementById('insumoPrecio').value      = '';
   document.getElementById('insumoCantidad').value    = '';
@@ -2053,7 +2009,6 @@ function editInsumo(id) {
   if (!ins) return;
   document.getElementById('insumoModalTitle').textContent = 'Editar insumo';
   document.getElementById('insumoEditId').value    = id;
-  document.getElementById('insumoCategoria').value = ins.categoria || '';
   document.getElementById('insumoNombre').value    = ins.nombre;
   document.getElementById('insumoPrecio').value    = fmtVal(ins.precio);
   document.getElementById('insumoCantidad').value  = ins.cantidad;
@@ -2075,7 +2030,6 @@ function calcCostoUnitario() {
 /* ── Guardar insumo ─────────────────────────────────────── */
 function saveInsumo() {
   const nombre    = document.getElementById('insumoNombre').value.trim();
-  const categoria = document.getElementById('insumoCategoria').value.trim();
   const precio    = parseInputVal('insumoPrecio');
   const cantidad  = parseFloat(document.getElementById('insumoCantidad').value);
   const unidad    = document.getElementById('insumoUnidad').value;
@@ -2092,9 +2046,9 @@ function saveInsumo() {
 
   if (editId) {
     const idx = insumos.findIndex(i => i.id === editId);
-    if (idx >= 0) insumos[idx] = { ...insumos[idx], nombre, categoria, precio, cantidad, unidad, updatedAt: now };
+    if (idx >= 0) insumos[idx] = { ...insumos[idx], nombre, precio, cantidad, unidad, updatedAt: now };
   } else {
-    insumos.push({ id: uid(), nombre, categoria, precio, cantidad, unidad, updatedAt: now });
+    insumos.push({ id: uid(), nombre, precio, cantidad, unidad, updatedAt: now });
   }
 
   setInsumos(insumos);
@@ -2211,6 +2165,46 @@ function getRecetas() {
 
 function setRecetas(data) {
   localStorage.setItem(KEY_RECETAS, JSON.stringify(data));
+}
+
+/* ── Categorías de recetas ──────────────────────────────── */
+const KEY_CAT_RECETAS      = 'makyta_cat_recetas';
+const DEFAULT_CATS_RECETAS = ['Rolls', 'Entradas', 'Bebidas', 'Postres', 'Otros'];
+
+function getCatRecetas() {
+  try { return JSON.parse(localStorage.getItem(KEY_CAT_RECETAS)) || null; }
+  catch { return null; }
+}
+
+function setCatRecetas(cats) {
+  localStorage.setItem(KEY_CAT_RECETAS, JSON.stringify(cats));
+}
+
+function buildCatSelect(selectedVal) {
+  const sel = document.getElementById('recetaCategoria');
+  if (!sel) return;
+  const cats = getCatRecetas() || DEFAULT_CATS_RECETAS;
+  const val  = selectedVal || cats[0] || '';
+  sel.innerHTML = cats.map(c =>
+    `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(c)}</option>`
+  ).join('') + `<option value="__nueva__">➕ Nueva categoría…</option>`;
+  sel.value = cats.includes(val) ? val : cats[0];
+}
+
+function onCatChange(sel) {
+  if (sel.value !== '__nueva__') return;
+  const nombre = prompt('Nombre de la nueva categoría:');
+  if (!nombre || !nombre.trim()) { sel.value = (getCatRecetas() || DEFAULT_CATS_RECETAS)[0]; return; }
+  const trimmed = nombre.trim();
+  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  if (!cats.includes(trimmed)) {
+    cats.push(trimmed);
+    cats.sort((a, b) => a.localeCompare(b, 'es'));
+    setCatRecetas(cats);
+  }
+  buildCatSelect(trimmed);
+  renderRecCatFilter();
+  showToast(`Categoría "${trimmed}" creada`, 'success');
 }
 
 /* ── Recetas precargadas ────────────────────────────────── */
@@ -2497,7 +2491,7 @@ function openRecetaModal() {
   document.getElementById('recetaModalTitle').textContent = 'Nueva receta';
   document.getElementById('recetaEditId').value    = '';
   document.getElementById('recetaNombre').value    = '';
-  document.getElementById('recetaCategoria').value = '';
+  buildCatSelect('');
   document.getElementById('recetaPrecio').value    = '';
   document.getElementById('ingredienteRows').innerHTML = '';
   document.getElementById('recetaCostoTotal').textContent = '$0';
@@ -2515,7 +2509,7 @@ function editReceta(id) {
   document.getElementById('recetaModalTitle').textContent = 'Editar receta';
   document.getElementById('recetaEditId').value    = id;
   document.getElementById('recetaNombre').value    = rec.nombre;
-  document.getElementById('recetaCategoria').value = rec.categoria || '';
+  buildCatSelect(rec.categoria || '');
   document.getElementById('recetaPrecio').value    = fmtVal(rec.precio);
   document.getElementById('ingredienteRows').innerHTML = '';
   rec.ingredientes.forEach(ing => addIngredienteRow(ing));
