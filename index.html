@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Panel de control Makyta Sushi — Nancagua, Chile">
+<meta name="theme-color" content="#0f1219">
 <title>Makyta Sushi — Panel de Control</title>
 <style>
 
@@ -11,32 +12,37 @@
    VARIABLES
 ============================================================ */
 :root {
-  --red:        #dc2626;
-  --red-dark:   #b91c1c;
-  --red-light:  #fef2f2;
-  --black:      #111827;
-  --gray-900:   #111827;
-  --gray-800:   #1f2937;
-  --gray-700:   #374151;
-  --gray-600:   #4b5563;
-  --gray-500:   #6b7280;
-  --gray-400:   #9ca3af;
-  --gray-300:   #d1d5db;
-  --gray-200:   #e5e7eb;
-  --gray-100:   #f3f4f6;
-  --gray-50:    #f9fafb;
-  --white:      #ffffff;
-  --green:      #16a34a;
-  --green-light:#f0fdf4;
-  --yellow:     #d97706;
-  --yellow-light:#fffbeb;
-  --blue:       #2563eb;
-  --blue-light: #eff6ff;
+  color-scheme: dark;
 
-  --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
-  --shadow:     0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-md:  0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
-  --shadow-lg:  0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+  /* Tema oscuro: la escala de grises está invertida respecto al
+     tema claro original — gray-900 es el texto más claro y
+     gray-50 el fondo más oscuro. --white son las superficies. */
+  --red:        #ef4444;
+  --red-dark:   #dc2626;
+  --red-light:  #2a181b;
+  --black:      #f2f4f8;
+  --gray-900:   #f2f4f8;
+  --gray-800:   #e3e7ee;
+  --gray-700:   #c5ccd8;
+  --gray-600:   #9aa3b2;
+  --gray-500:   #7e8798;
+  --gray-400:   #5d6678;
+  --gray-300:   #394153;
+  --gray-200:   #2a3040;
+  --gray-100:   #1f2430;
+  --gray-50:    #0f1219;
+  --white:      #181c26;
+  --green:      #22c55e;
+  --green-light:#142a1c;
+  --yellow:     #f59e0b;
+  --yellow-light:#2b2212;
+  --blue:       #60a5fa;
+  --blue-light: #16233c;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.35);
+  --shadow:     0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:  0 4px 10px rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.3);
+  --shadow-lg:  0 14px 28px rgba(0,0,0,.5), 0 4px 8px rgba(0,0,0,.35);
 
   --r-sm: 6px;
   --r:    10px;
@@ -73,7 +79,9 @@ body {
    HEADER
 ============================================================ */
 .app-header {
-  background: var(--white);
+  background: rgba(24,28,38,.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--gray-200);
   height: var(--nav-h);
   padding: 0 1.25rem;
@@ -197,7 +205,9 @@ body {
   position: fixed;
   inset: auto 0 0 0;
   height: var(--mobile-nav-h);
-  background: var(--white);
+  background: rgba(24,28,38,.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--gray-200);
   display: flex;
   z-index: 100;
@@ -411,7 +421,7 @@ tfoot td {
 
 .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-.btn-primary { background: var(--red); color: var(--white); }
+.btn-primary { background: var(--red); color: #fff; }
 .btn-primary:hover { background: var(--red-dark); }
 
 .btn-secondary {
@@ -471,7 +481,7 @@ tfoot td {
 .form-input:focus,
 .form-select:focus {
   border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+  box-shadow: 0 0 0 3px rgba(239,68,68,.25);
 }
 
 .form-input::placeholder { color: var(--gray-400); }
@@ -664,16 +674,16 @@ tfoot td {
 
 .hint-box p { font-size: 0.8125rem; color: var(--gray-700); line-height: 1.55; }
 
-.hint-box.info    { background: var(--blue-light);   border: 1px solid #bfdbfe; }
+.hint-box.info    { background: var(--blue-light);   border: 1px solid rgba(96,165,250,.35); }
 .hint-box.info svg{ color: var(--blue); }
 
-.hint-box.warn    { background: var(--yellow-light); border: 1px solid #fde68a; }
+.hint-box.warn    { background: var(--yellow-light); border: 1px solid rgba(245,158,11,.35); }
 .hint-box.warn svg{ color: var(--yellow); }
 
-.hint-box.ok      { background: var(--green-light);  border: 1px solid #bbf7d0; }
+.hint-box.ok      { background: var(--green-light);  border: 1px solid rgba(34,197,94,.35); }
 .hint-box.ok svg  { color: var(--green); }
 
-.hint-box.danger  { background: var(--red-light);    border: 1px solid #fecaca; }
+.hint-box.danger  { background: var(--red-light);    border: 1px solid rgba(239,68,68,.35); }
 .hint-box.danger svg { color: var(--red); }
 
 /* ============================================================
@@ -839,13 +849,14 @@ tfoot td {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.45);
+  background: rgba(5,7,12,.65);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   opacity: 0;
   pointer-events: none;
   transition: opacity .2s;
@@ -959,9 +970,9 @@ tfoot td {
   font-family: var(--font);
 }
 
-.toast.success { background: #14532d; }
-.toast.error   { background: #7f1d1d; }
-.toast.info    { background: #1e3a5f; }
+.toast.success { background: #15803d; color: #fff; }
+.toast.error   { background: #b91c1c; color: #fff; }
+.toast.info    { background: #1d4ed8; color: #fff; }
 
 /* ============================================================
    ANIMATIONS
@@ -1013,7 +1024,31 @@ tfoot td {
   min-width: 52px;
 }
 .day-btn:hover { border-color: var(--red); color: var(--red); }
-.day-btn.active { background: var(--red); border-color: var(--red); color: var(--white); }
+.day-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* ============================================================
+   TEMA OSCURO — DETALLES
+============================================================ */
+/* Resplandor sutil rojo arriba para dar profundidad al fondo */
+body {
+  background:
+    radial-gradient(ellipse 80% 500px at 50% -100px, rgba(239,68,68,.07), transparent),
+    var(--gray-50);
+}
+
+/* Scrollbars oscuros (Chrome/Android) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 999px;
+  border: 2px solid var(--gray-50);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+* { scrollbar-width: thin; scrollbar-color: var(--gray-300) transparent; }
+
+/* Resaltado de selección acorde al tema */
+::selection { background: rgba(239,68,68,.35); color: #fff; }
 
 </style>
 </head>
@@ -1022,16 +1057,18 @@ tfoot td {
 <!-- ========================================================
      PANTALLA DE CONTRASEÑA
 ======================================================== -->
-<div id="lockScreen" style="position:fixed;inset:0;background:#111827;z-index:9999;
+<div id="lockScreen" style="position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(239,68,68,.12), transparent), #0a0c12;
   display:flex;align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#fff;border-radius:24px;padding:2.5rem 2rem;text-align:center;
-    width:100%;max-width:300px;box-shadow:0 25px 50px rgba(0,0,0,.5)">
+  <div style="background:#181c26;border:1px solid #2a3040;border-radius:24px;
+    padding:2.5rem 2rem;text-align:center;
+    width:100%;max-width:300px;box-shadow:0 25px 50px rgba(0,0,0,.6)">
     <div style="width:64px;height:64px;background:#dc2626;border-radius:16px;
       display:flex;align-items:center;justify-content:center;font-size:2rem;
-      margin:0 auto 1rem">🍣</div>
-    <div style="font-size:1.25rem;font-weight:700;color:#111827;margin-bottom:.25rem">
+      margin:0 auto 1rem;box-shadow:0 8px 24px rgba(220,38,38,.35)">🍣</div>
+    <div style="font-size:1.25rem;font-weight:700;color:#f2f4f8;margin-bottom:.25rem">
       Makyta Sushi</div>
-    <div style="font-size:.875rem;color:#6b7280;margin-bottom:1.75rem">
+    <div style="font-size:.875rem;color:#7e8798;margin-bottom:1.75rem">
       Panel de Control</div>
     <input
       type="password"
@@ -1041,11 +1078,12 @@ tfoot td {
       placeholder="••••"
       autocomplete="off"
       oninput="checkPin(this)"
-      style="width:100%;padding:.75rem;border:2px solid #e5e7eb;border-radius:10px;
+      style="width:100%;padding:.75rem;border:2px solid #2a3040;border-radius:10px;
         font-size:1.75rem;text-align:center;letter-spacing:.75rem;outline:none;
+        background:#0f1219;color:#f2f4f8;
         transition:border-color .15s,background .15s;font-family:monospace"
-      onfocus="this.style.borderColor='#dc2626'"
-      onblur="this.style.borderColor='#e5e7eb'"
+      onfocus="this.style.borderColor='#ef4444'"
+      onblur="this.style.borderColor='#2a3040'"
     >
     <div id="pinError" style="min-height:1.25rem;margin-top:.625rem;
       font-size:.8125rem;color:#dc2626;font-weight:500"></div>
@@ -3723,8 +3761,8 @@ function checkPin(input) {
   if (input.value.length < 4) return;
 
   if (input.value === '1206') {
-    input.style.borderColor   = '#16a34a';
-    input.style.background    = '#f0fdf4';
+    input.style.borderColor   = '#22c55e';
+    input.style.background    = 'rgba(34,197,94,.12)';
     sessionStorage.setItem('makyta_auth', '1');
     setTimeout(() => {
       const ls = document.getElementById('lockScreen');
@@ -3741,7 +3779,7 @@ function checkPin(input) {
     setTimeout(() => {
       input.value           = '';
       input.style.animation = '';
-      input.style.borderColor = '#e5e7eb';
+      input.style.borderColor = '#2a3040';
       errEl.textContent     = '';
       input.focus();
     }, 1000);
