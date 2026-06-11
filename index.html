@@ -1246,6 +1246,10 @@ body {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Reporte PDF
         </button>
+        <button class="btn btn-secondary btn-sm" onclick="exportRecetario()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Recetario
+        </button>
         <button class="btn btn-primary" onclick="openRecetaModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nueva receta
@@ -2403,12 +2407,37 @@ const DEFAULTS_RECETAS = [
 ];
 
 /* ── Costo de una receta ────────────────────────────────── */
-function calcCostoReceta(ingredientes) {
+/* Un ingrediente puede ser un insumo ({insumoId, cantidad}) o una
+   sub-receta ({recetaId, cantidad}); el costo se resuelve en cadena.
+   `_seen` evita recursión infinita si los datos tuvieran un ciclo. */
+function calcCostoReceta(ingredientes, _seen) {
   const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const recetas = getRecetas() || DEFAULTS_RECETAS;
+  _seen = _seen || new Set();
   return ingredientes.reduce((total, ing) => {
+    if (ing.recetaId) {
+      if (_seen.has(ing.recetaId)) return total;
+      const sub = recetas.find(r => r.id === ing.recetaId);
+      if (!sub) return total;
+      const seen = new Set(_seen); seen.add(ing.recetaId);
+      return total + calcCostoReceta(sub.ingredientes, seen) * ing.cantidad;
+    }
     const ins = insumos.find(i => i.id === ing.insumoId);
     return ins ? total + costoUnitario(ins) * ing.cantidad : total;
   }, 0);
+}
+
+/* ¿La receta `rec` contiene (directa o indirectamente) a targetId? */
+function recetaContieneA(rec, targetId, recetas, _seen) {
+  _seen = _seen || new Set();
+  return (rec.ingredientes || []).some(ing => {
+    if (!ing.recetaId || _seen.has(ing.recetaId)) return false;
+    if (ing.recetaId === targetId) return true;
+    const sub = recetas.find(r => r.id === ing.recetaId);
+    if (!sub) return false;
+    const seen = new Set(_seen); seen.add(ing.recetaId);
+    return recetaContieneA(sub, targetId, recetas, seen);
+  });
 }
 
 /* ── Semáforo ───────────────────────────────────────────── */
@@ -2448,6 +2477,12 @@ function renderRecetas() {
     const colorVar = sem.cls === 'green' ? 'var(--green)' : sem.cls === 'yellow' ? 'var(--yellow)' : 'var(--red)';
 
     const chips = rec.ingredientes.map(ing => {
+      if (ing.recetaId) {
+        const sub = allRecetas.find(r => r.id === ing.recetaId);
+        return sub
+          ? `<span class="recipe-chip" style="border:1px solid var(--gray-300)">📋 ${esc(sub.nombre)} ×${ing.cantidad}</span>`
+          : `<span class="recipe-chip" style="color:var(--red)">(receta eliminada)</span>`;
+      }
       const ins = insumos.find(i => i.id === ing.insumoId);
       return ins
         ? `<span class="recipe-chip">${esc(ins.nombre)} ${ing.cantidad}${ins.unidad}</span>`
@@ -2559,15 +2594,31 @@ function updateRecetaStats(all, insumos) {
 }
 
 /* ── Fila de ingrediente en modal ───────────────────────── */
+/* En el select, los insumos usan su id directo y las sub-recetas
+   van con prefijo "r:" para distinguirlas al guardar. */
 function buildIngRow(ing) {
   const insumos = (getInsumos() || DEFAULTS_INSUMOS)
     .slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
-  const opts = `<option value="">Selecciona insumo…</option>` +
+  const recetas = getRecetas() || DEFAULTS_RECETAS;
+  const editId  = document.getElementById('recetaEditId').value;
+
+  // Excluir la receta en edición y las que ya la contienen (evita ciclos)
+  const subOk = recetas
+    .filter(r => r.id !== editId && !(editId && recetaContieneA(r, editId, recetas)))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+  const opts = `<option value="">Selecciona ingrediente…</option>` +
+    `<optgroup label="🧂 Insumos">` +
     insumos.map(i =>
       `<option value="${i.id}" ${ing && ing.insumoId === i.id ? 'selected' : ''}>${esc(i.nombre)}</option>`
-    ).join('');
+    ).join('') + `</optgroup>` +
+    (subOk.length ? `<optgroup label="📋 Recetas">` +
+      subOk.map(r =>
+        `<option value="r:${r.id}" ${ing && ing.recetaId === r.id ? 'selected' : ''}>${esc(r.nombre)}</option>`
+      ).join('') + `</optgroup>` : '');
 
-  const selIns = ing ? insumos.find(i => i.id === ing.insumoId) : null;
+  const selIns = ing && ing.insumoId ? insumos.find(i => i.id === ing.insumoId) : null;
+  const selRec = ing && ing.recetaId ? recetas.find(r => r.id === ing.recetaId) : null;
 
   const row = document.createElement('div');
   row.setAttribute('data-ing-row', '');
@@ -2582,7 +2633,7 @@ function buildIngRow(ing) {
       value="${ing ? ing.cantidad : ''}"
       oninput="calcRecetaLive()">
     <span class="badge badge-gray" style="justify-content:center;text-align:center">
-      ${selIns ? selIns.unidad : '—'}
+      ${selIns ? selIns.unidad : selRec ? 'u' : '—'}
     </span>
     <button type="button" class="btn btn-ghost btn-icon danger"
       onclick="this.closest('[data-ing-row]').remove();calcRecetaLive()" title="Quitar">
@@ -2592,8 +2643,10 @@ function buildIngRow(ing) {
 }
 
 function syncIngUnit(select) {
+  const badge = select.closest('[data-ing-row]').querySelector('.badge');
+  if (select.value.startsWith('r:')) { badge.textContent = 'u'; return; }
   const ins = (getInsumos() || DEFAULTS_INSUMOS).find(i => i.id === select.value);
-  select.closest('[data-ing-row]').querySelector('.badge').textContent = ins ? ins.unidad : '—';
+  badge.textContent = ins ? ins.unidad : '—';
 }
 
 function addIngredienteRow(ing) {
@@ -2611,8 +2664,13 @@ function calcRecetaLive() {
   rows.forEach(row => {
     const id  = row.querySelector('select').value;
     const qty = parseFloat(row.querySelector('input').value) || 0;
+    if (qty <= 0) return;
+    if (id.startsWith('r:')) {
+      costo += calcCostoReceta([{ recetaId: id.slice(2), cantidad: qty }]);
+      return;
+    }
     const ins = insumos.find(i => i.id === id);
-    if (ins && qty > 0) costo += costoUnitario(ins) * qty;
+    if (ins) costo += costoUnitario(ins) * qty;
   });
 
   document.getElementById('recetaCostoTotal').textContent = clp(costo);
@@ -2691,11 +2749,12 @@ function saveReceta() {
   let rowError = false;
 
   rows.forEach(row => {
-    const insumoId = row.querySelector('select').value;
+    const val      = row.querySelector('select').value;
     const cantidad = parseFloat(row.querySelector('input').value);
-    if (insumoId && cantidad > 0) {
-      ingredientes.push({ insumoId, cantidad });
-    } else if (insumoId || cantidad > 0) {
+    if (val && cantidad > 0) {
+      if (val.startsWith('r:')) ingredientes.push({ recetaId: val.slice(2), cantidad });
+      else                      ingredientes.push({ insumoId: val, cantidad });
+    } else if (val || cantidad > 0) {
       rowError = true;
     }
   });
@@ -2745,13 +2804,27 @@ function duplicarReceta(id) {
 
 /* ── Eliminar ───────────────────────────────────────────── */
 function deleteReceta(id) {
-  const rec = (getRecetas() || DEFAULTS_RECETAS).find(r => r.id === id);
+  const recetas = getRecetas() || DEFAULTS_RECETAS;
+  const rec = recetas.find(r => r.id === id);
   if (!rec) return;
+
+  const usadaPor = recetas.filter(r =>
+    r.id !== id && (r.ingredientes || []).some(ing => ing.recetaId === id));
+  const aviso = usadaPor.length
+    ? `⚠️ Otras recetas la usan como ingrediente y la perderán: ${usadaPor.map(r => r.nombre).join(', ')}.`
+    : 'Esta receta se eliminará permanentemente.';
+
   confirmDelete(
     `¿Eliminar "${rec.nombre}"?`,
-    'Esta receta se eliminará permanentemente.',
+    aviso,
     () => {
-      setRecetas((getRecetas() || []).filter(r => r.id !== id));
+      const updated = (getRecetas() || [])
+        .filter(r => r.id !== id)
+        .map(r => ({
+          ...r,
+          ingredientes: (r.ingredientes || []).filter(ing => ing.recetaId !== id)
+        }));
+      setRecetas(updated);
       renderRecetas();
       if (typeof calcEquilibrio === 'function') calcEquilibrio();
       showToast('🗑️ Receta eliminada', 'info');
@@ -2771,6 +2844,10 @@ function exportRecetas() {
     const sem    = semaforoData(pct);
     const color  = sem.cls === 'green' ? '#16a34a' : sem.cls === 'yellow' ? '#d97706' : '#dc2626';
     const ings   = rec.ingredientes.map(ing => {
+      if (ing.recetaId) {
+        const sub = all.find(r => r.id === ing.recetaId);
+        return sub ? `📋 ${sub.nombre} ×${ing.cantidad}` : '—';
+      }
       const ins = insumos.find(i => i.id === ing.insumoId);
       return ins ? `${ins.nombre} ${ing.cantidad}${ins.unidad}` : '—';
     }).join(' · ');
@@ -2807,6 +2884,83 @@ function exportRecetas() {
   win.document.close();
 }
 
+/* ── Recetario para cocina (ventana de impresión) ───────── */
+/* Sin precios ni costos: es para pegarlo en el local. Solo
+   nombre, categoría y cantidades de cada ingrediente. */
+function exportRecetario() {
+  const all     = (getRecetas() || DEFAULTS_RECETAS)
+    .slice().sort((a, b) =>
+      (a.categoria || 'zzz').localeCompare(b.categoria || 'zzz', 'es') ||
+      a.nombre.localeCompare(b.nombre, 'es'));
+  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
+
+  if (!all.length) return showToast('⚠️ No hay recetas para imprimir', 'error');
+
+  let lastCat = null;
+  const cuerpo = all.map(rec => {
+    const filas = rec.ingredientes.map(ing => {
+      if (ing.recetaId) {
+        const sub = all.find(r => r.id === ing.recetaId);
+        return sub ? `<li><b>${ing.cantidad} u</b><span class="sep"></span>📋 ${esc(sub.nombre)} <em>(ver receta)</em></li>` : '';
+      }
+      const ins = insumos.find(i => i.id === ing.insumoId);
+      return ins ? `<li><b>${ing.cantidad} ${ins.unidad}</b><span class="sep"></span>${esc(ins.nombre)}</li>` : '';
+    }).join('');
+
+    const cat = rec.categoria || 'Sin categoría';
+    const catHeader = cat !== lastCat ? `<h2>${esc(cat)}</h2>` : '';
+    lastCat = cat;
+
+    return `${catHeader}<div class="card">
+      <div class="card-name">${esc(rec.nombre)}</div>
+      <ul>${filas}</ul>
+    </div>`;
+  }).join('');
+
+  const win = window.open('','_blank');
+  if (!win) return showToast('⚠️ Permite ventanas emergentes', 'error');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Recetario — Makyta Sushi</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2937;
+        padding:1.5rem;max-width:860px;margin:0 auto}
+      header{display:flex;align-items:center;gap:.75rem;border-bottom:3px solid #dc2626;
+        padding-bottom:.75rem;margin-bottom:.5rem}
+      .logo{width:44px;height:44px;background:#dc2626;border-radius:10px;display:flex;
+        align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+      h1{font-size:1.375rem;line-height:1.2}
+      .sub{color:#6b7280;font-size:.8125rem}
+      h2{font-size:.8125rem;text-transform:uppercase;letter-spacing:.1em;color:#dc2626;
+        margin:1.25rem 0 .25rem;grid-column:1/-1}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;align-items:start}
+      .card{border:1.5px solid #e5e7eb;border-radius:12px;padding:.875rem 1rem;
+        break-inside:avoid;page-break-inside:avoid;margin-top:.5rem}
+      .card-name{font-size:1.0625rem;font-weight:700;color:#111827;
+        border-bottom:1px dashed #d1d5db;padding-bottom:.375rem;margin-bottom:.5rem}
+      ul{list-style:none}
+      li{display:flex;align-items:baseline;font-size:.875rem;padding:.2rem 0}
+      li b{min-width:64px;color:#dc2626;font-variant-numeric:tabular-nums}
+      li em{color:#9ca3af;font-size:.75rem;margin-left:.375rem}
+      .sep{flex:0 0 .25rem}
+      footer{margin-top:1.5rem;text-align:center;color:#9ca3af;font-size:.75rem}
+      @media print{body{padding:0}}
+    </style></head><body>
+    <header>
+      <div class="logo">🍣</div>
+      <div>
+        <h1>Recetario — Makyta Sushi</h1>
+        <div class="sub">${all.length} recetas · ${fecha}</div>
+      </div>
+    </header>
+    <div class="grid">${cuerpo}</div>
+    <footer>Makyta Sushi · Nancagua</footer>
+    <script>setTimeout(()=>window.print(),300)<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
 /* ── Exportar CSV recetas ───────────────────────────────── */
 function exportRecetasCSV() {
   const all     = getRecetas() || DEFAULTS_RECETAS;
@@ -2818,6 +2972,12 @@ function exportRecetasCSV() {
       rows.push([rec.nombre, rec.categoria || '', rec.precio, '', '', '']);
     } else {
       rec.ingredientes.forEach(ing => {
+        if (ing.recetaId) {
+          const sub = all.find(r => r.id === ing.recetaId);
+          rows.push([rec.nombre, rec.categoria || '', rec.precio,
+            sub ? '[Receta] ' + sub.nombre : '', ing.cantidad, 'u']);
+          return;
+        }
         const ins = insumos.find(i => i.id === ing.insumoId);
         rows.push([rec.nombre, rec.categoria || '', rec.precio,
           ins ? ins.nombre : '', ing.cantidad, ins ? ins.unidad : '']);
@@ -2856,6 +3016,12 @@ function importRecetas(input) {
         if (!nombre || isNaN(precio)) return;
         if (!map[nombre]) map[nombre] = { nombre, categoria, precio, ingredientes: [] };
         if (ingNombre && !isNaN(cantidad) && cantidad > 0) {
+          if (/^\[Receta\]\s*/i.test(ingNombre)) {
+            const subNombre = ingNombre.replace(/^\[Receta\]\s*/i, '');
+            const sub = recetas.find(r => r.nombre.toLowerCase() === subNombre.toLowerCase());
+            if (sub) map[nombre].ingredientes.push({ recetaId: sub.id, cantidad });
+            return;
+          }
           const ins = insumos.find(i => i.nombre.toLowerCase() === ingNombre.toLowerCase());
           if (ins) map[nombre].ingredientes.push({ insumoId: ins.id, cantidad });
         }
