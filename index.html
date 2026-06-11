@@ -3994,7 +3994,7 @@ function renderEqProyeccion(actual, ventasMin) {
   const pctHoy = dia / diasEnMes * 100;
 
   const mensaje = ok
-    ? `🎯 A este ritmo, el <strong>día ${Math.min(diaLib, diasEnMes)}</strong> cubres todos tus gastos — desde ahí, cada venta es ganancia pura.`
+    ? `🎯 A este ritmo, el <strong>día ${Math.min(diaLib, diasEnMes)}</strong> cubres todos tus gastos fijos — desde ahí, lo que vendes (descontando sus insumos) es ganancia.`
     : (restantes > 0
         ? `A este ritmo no alcanzas el equilibrio este mes. Necesitas vender en promedio <strong>${clp(ritmoNec)}</strong> diarios los ${restantes} días que quedan.`
         : `El mes terminó por debajo del punto de equilibrio.`);
