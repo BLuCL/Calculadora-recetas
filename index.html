@@ -2246,10 +2246,26 @@ function setCatRecetas(cats) {
   localStorage.setItem(KEY_CAT_RECETAS, JSON.stringify(cats));
 }
 
+/* Completa la lista guardada con categorías que existen solo dentro
+   de recetas (creadas antes del administrador de categorías). */
+function syncCatsConRecetas() {
+  const guardadas = getCatRecetas();
+  const cats = guardadas ? [...guardadas] : [...DEFAULT_CATS_RECETAS];
+  let changed = !guardadas;
+  (getRecetas() || DEFAULTS_RECETAS).forEach(r => {
+    if (r.categoria && !cats.includes(r.categoria)) { cats.push(r.categoria); changed = true; }
+  });
+  if (changed) {
+    cats.sort((a, b) => a.localeCompare(b, 'es'));
+    setCatRecetas(cats);
+  }
+  return cats;
+}
+
 function buildCatSelect(selectedVal) {
   const sel = document.getElementById('recetaCategoria');
   if (!sel) return;
-  const cats = getCatRecetas() || DEFAULT_CATS_RECETAS;
+  const cats = syncCatsConRecetas();
   const val  = selectedVal || cats[0] || '';
   sel.innerHTML = cats.map(c =>
     `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(c)}</option>`
@@ -2277,7 +2293,7 @@ function onCatChange(sel) {
 function renderCatRecetasList() {
   const container = document.getElementById('catRecetasList');
   if (!container) return;
-  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const cats = syncCatsConRecetas();
   if (cats.length === 0) {
     container.innerHTML = '<p class="text-sm text-muted">Sin categorías definidas.</p>';
     return;
