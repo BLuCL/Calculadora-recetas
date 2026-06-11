@@ -2520,7 +2520,8 @@ function updateRecetaStats(all, insumos) {
 
 /* ── Fila de ingrediente en modal ───────────────────────── */
 function buildIngRow(ing) {
-  const insumos = getInsumos() || DEFAULTS_INSUMOS;
+  const insumos = (getInsumos() || DEFAULTS_INSUMOS)
+    .slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
   const opts = `<option value="">Selecciona insumo…</option>` +
     insumos.map(i =>
       `<option value="${i.id}" ${ing && ing.insumoId === i.id ? 'selected' : ''}>${esc(i.nombre)}</option>`
