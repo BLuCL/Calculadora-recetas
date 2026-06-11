@@ -1542,7 +1542,7 @@ body {
             </div>
             <div class="form-group">
               <label class="form-label">¿Cuánto llevas vendido este mes? <em>($)</em></label>
-              <span class="form-hint">Ingresa el total acumulado de ventas del mes en curso. Deja en 0 si aún no has vendido.</span>
+              <span class="form-hint" id="eq-ventas-hint">Ingresa el total acumulado de ventas de tu mes en curso. Deja en 0 si aún no has vendido.</span>
               <input type="text" inputmode="numeric" class="form-input" id="eq-ventas-act" oninput="fmtInput(this);calcEquilibrio()">
             </div>
           </div>
@@ -1673,6 +1673,17 @@ body {
             <label class="form-label">Hora de cierre</label>
             <input type="time" class="form-input" id="cfg-cierre" value="23:00" onchange="saveConfig()">
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header"><span class="card-title">Inicio de tu mes</span></div>
+      <div class="card-body">
+        <div class="form-group" style="max-width:240px">
+          <label class="form-label">Día en que comienza tu mes</label>
+          <input type="number" class="form-input" id="cfg-inicio-mes" value="1" min="1" max="28" onchange="saveConfig()">
+          <span class="form-hint">Ej: si abres tu mes el día 5 y lo cierras el 4 del mes siguiente, escribe 5. La proyección del Punto de Equilibrio usará ese ciclo.</span>
         </div>
       </div>
     </div>
@@ -3791,6 +3802,12 @@ function calcEquilibrio() {
   // Siempre actualiza la tarjeta de gastos
   document.getElementById('eq-gastos').textContent = clp(gastos);
 
+  // Hint del campo de ventas según el ciclo configurado
+  const _ciclo = getCicloMes();
+  document.getElementById('eq-ventas-hint').textContent = _ciclo.label
+    ? `Total acumulado de tu mes actual (${_ciclo.label}). Deja en 0 si aún no has vendido.`
+    : 'Ingresa el total acumulado de ventas de tu mes en curso. Deja en 0 si aún no has vendido.';
+
   if (!gastos || !ticket || !margen) {
     ['eq-ventas-min','eq-ventas-dia','eq-rolls-mes','eq-rolls-dia'].forEach(id =>
       document.getElementById(id).textContent = id.includes('rolls') ? '0' : '$0');
@@ -3963,9 +3980,9 @@ function renderEqProyeccion(actual, ventasMin) {
   if (!el) return;
   if (!ventasMin || actual <= 0) { el.innerHTML = ''; return; }
 
-  const hoy       = new Date();
-  const dia       = hoy.getDate();
-  const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+  const ciclo     = getCicloMes();
+  const dia       = ciclo.dia;
+  const diasEnMes = ciclo.diasEnMes;
   const ritmo     = actual / dia;                 // $ por día calendario
   const proyeccion = ritmo * diasEnMes;
   const ok        = proyeccion >= ventasMin;
@@ -3985,7 +4002,7 @@ function renderEqProyeccion(actual, ventasMin) {
   el.innerHTML = `
     <div class="divider"></div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap">
-      <span class="text-sm text-muted">Proyección a fin de mes <em>(día ${dia} de ${diasEnMes})</em></span>
+      <span class="text-sm text-muted">Proyección al cierre de tu mes <em>(día ${dia} de ${diasEnMes}${ciclo.label ? ' · ' + ciclo.label : ''})</em></span>
       <span style="font-size:1.25rem;font-weight:700;color:var(--${ok ? 'green' : 'red'})">${clp(proyeccion)}</span>
     </div>
     ${dia <= 3 ? '<div class="text-sm text-muted" style="font-size:.75rem">Recién comienza el mes — la proyección se afina con los días.</div>' : ''}
@@ -4368,7 +4385,7 @@ function scheduleSync() {
 
 /* ── MÓDULO CONFIGURACIÓN ───────────────────────────────── */
 const KEY_CONFIG      = 'makyta_config';
-const DEFAULTS_CONFIG = { dias: [0,1,2,3,4], apertura: '12:00', cierre: '23:00' };
+const DEFAULTS_CONFIG = { dias: [0,1,2,3,4], apertura: '12:00', cierre: '23:00', inicioMes: 1 };
 
 function getConfig()  { try { return JSON.parse(localStorage.getItem(KEY_CONFIG)) || null; } catch { return null; } }
 function setConfig(d) { localStorage.setItem(KEY_CONFIG, JSON.stringify(d)); }
@@ -4378,14 +4395,34 @@ function getDiasMes() {
   return Math.max(1, Math.round(cfg.dias.length * 4.33));
 }
 
+/* Ciclo de mes personalizado (ej: del 5 al 4 del mes siguiente) */
+function getCicloMes() {
+  const cfg    = getConfig() || DEFAULTS_CONFIG;
+  const inicio = Math.min(28, Math.max(1, parseInt(cfg.inicioMes) || 1));
+  const hoy    = new Date();
+  const hoy0   = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const start  = hoy.getDate() >= inicio
+    ? new Date(hoy.getFullYear(), hoy.getMonth(), inicio)
+    : new Date(hoy.getFullYear(), hoy.getMonth() - 1, inicio);
+  const next   = new Date(start.getFullYear(), start.getMonth() + 1, inicio);
+  const MS_DIA = 86400000;
+  const diasEnMes = Math.round((next - start) / MS_DIA);
+  const dia       = Math.round((hoy0 - start) / MS_DIA) + 1;
+  const fmt = d => d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+  const fin = new Date(next.getTime() - MS_DIA);
+  return { inicio, dia, diasEnMes, label: inicio > 1 ? `${fmt(start)} – ${fmt(fin)}` : '' };
+}
+
 function saveConfig() {
   const dias = [];
   document.querySelectorAll('[data-dia-btn]').forEach(btn => {
     if (btn.classList.contains('active')) dias.push(Number(btn.dataset.diaBtn));
   });
-  const apertura = document.getElementById('cfg-apertura').value;
-  const cierre   = document.getElementById('cfg-cierre').value;
-  setConfig({ dias, apertura, cierre });
+  const apertura  = document.getElementById('cfg-apertura').value;
+  const cierre    = document.getElementById('cfg-cierre').value;
+  const inicioMes = Math.min(28, Math.max(1, parseInt(document.getElementById('cfg-inicio-mes').value) || 1));
+  document.getElementById('cfg-inicio-mes').value = inicioMes;
+  setConfig({ dias, apertura, cierre, inicioMes });
   renderConfigStats();
   if (typeof calcEquilibrio === 'function') calcEquilibrio();
   showToast('✅ Configuración guardada');
@@ -4411,8 +4448,9 @@ function renderConfigStats() {
       saveConfig();
     });
   });
-  document.getElementById('cfg-apertura').value = cfg.apertura;
-  document.getElementById('cfg-cierre').value   = cfg.cierre;
+  document.getElementById('cfg-apertura').value   = cfg.apertura;
+  document.getElementById('cfg-cierre').value     = cfg.cierre;
+  document.getElementById('cfg-inicio-mes').value = cfg.inicioMes || 1;
   renderConfigStats();
   renderCatRecetasList();
 })();
