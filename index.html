@@ -312,7 +312,9 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--gray-900);
-  line-height: 1;
+  /* line-height ≥1.3: con overflow:hidden, una altura menor corta
+     los trazos descendentes de letras como g y j */
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
