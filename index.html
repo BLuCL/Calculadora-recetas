@@ -2083,6 +2083,29 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
+/* Parsea una fila CSV respetando campos entre comillas
+   (una coma dentro de "..." no separa columnas) */
+function parseCSVLine(line) {
+  const cols = [];
+  let cur = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else cur += ch;
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      cols.push(cur.trim()); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
 /* ── Storage ────────────────────────────────────────────── */
 const KEY_INSUMOS = 'makyta_insumos';
 
@@ -2305,8 +2328,7 @@ function importInsumos(input) {
 
       let added = 0, updated = 0;
       rows.forEach(row => {
-        // Parse CSV row (handles quoted fields)
-        const cols     = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        const cols     = parseCSVLine(row);
         const nombre   = cols[0];
         const categoria = cols[1] || '';
         const precio   = parseFloat(cols[2]);
@@ -3176,7 +3198,7 @@ function importRecetas(input) {
       // Agrupar filas por nombre de roll
       const map = {};
       lines.forEach(row => {
-        const cols      = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        const cols      = parseCSVLine(row);
         const nombre    = cols[0];
         const categoria = cols[1] || '';
         const precio    = parseFloat(cols[2]);
@@ -3378,8 +3400,12 @@ function timeToMins(t) {
 }
 
 function horasEntre(ini, fin) {
-  const diff = timeToMins(fin) - timeToMins(ini);
-  return diff > 0 ? diff / 60 : 0;
+  if (!ini || !fin) return 0;
+  let diff = timeToMins(fin) - timeToMins(ini);
+  // Fin "menor" que inicio = el horario cruza la medianoche
+  // (ej: 18:00–01:00 → 7 hrs)
+  if (diff < 0) diff += 24 * 60;
+  return diff / 60;
 }
 
 function costoPorHora(emp) {
@@ -3745,9 +3771,9 @@ function exportEquilibrio() {
   const actual  = parseInputVal('eq-ventas-act');
   const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
 
-  const ventasMin = margen > 0 && ticket > 0 ? gastos / (margen / 100) : 0;
+  const ventasMin = margen > 0 ? gastos / (margen / 100) : 0;
   const rollsMes  = ventasMin > 0 && ticket > 0 ? Math.ceil(ventasMin / ticket) : 0;
-  const rollsDia  = Math.ceil(rollsMes / 30);
+  const rollsDia  = Math.ceil(rollsMes / getDiasMes());
   const pct       = ventasMin > 0 && actual > 0 ? Math.min((actual / ventasMin) * 100, 100) : 0;
 
   const scenarios = [
