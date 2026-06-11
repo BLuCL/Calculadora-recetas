@@ -1576,10 +1576,16 @@ body {
     <div class="card" style="margin-bottom:1rem">
       <div class="card-header"><span class="card-title">Control del mes: vendido vs gastado</span></div>
       <div class="card-body">
-        <div class="form-group" style="max-width:300px;margin-bottom:1rem">
-          <label class="form-label">¿Cuánto has gastado en insumos este mes? <em>($)</em></label>
-          <span class="form-hint">Suma de tus compras de ingredientes y envases del mes en curso.</span>
-          <input type="text" inputmode="numeric" class="form-input" id="eq-gasto-insumos" oninput="fmtInput(this);calcEquilibrio()">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+          <div>
+            <span class="form-label" style="display:block">Gastado en insumos este mes</span>
+            <span style="font-size:1.375rem;font-weight:700" id="eq-gasto-total">$0</span>
+            <span class="form-hint" style="display:block" id="eq-facturas-count">Sin facturas registradas</span>
+          </div>
+          <button class="btn btn-secondary" onclick="openFacturasModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Facturas
+          </button>
         </div>
         <div id="eq-control"></div>
       </div>
@@ -1958,6 +1964,47 @@ body {
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('personalModal')">Cancelar</button>
       <button class="btn btn-primary" onclick="savePersonal()">Guardar empleado</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================================
+     MODAL: FACTURAS DE INSUMOS DEL MES
+======================================================== -->
+<div class="modal-overlay" id="facturasModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Facturas de insumos del mes</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('facturasModal')" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="factEditId">
+      <div class="form-grid form-grid-2" style="margin-bottom:.75rem">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-input" id="factFecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto <em>($)</em></label>
+          <input type="text" inputmode="numeric" class="form-input" id="factMonto" placeholder="Ej: 45.000" oninput="fmtInput(this)">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:.875rem">
+        <label class="form-label">Detalle <em>(opcional)</em></label>
+        <input type="text" class="form-input" id="factDetalle" placeholder="Ej: Pescadería, supermercado, envases…">
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-primary" id="factSaveBtn" onclick="saveFactura()">+ Agregar factura</button>
+        <button class="btn btn-secondary hidden" id="factCancelBtn" onclick="resetFacturaForm()">Cancelar edición</button>
+      </div>
+      <div class="divider"></div>
+      <div id="facturasList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('facturasModal')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -3812,8 +3859,8 @@ function calcEquilibrio() {
   const ticket = parseInputVal('eq-ticket');
   const margen   = parseFloat(document.getElementById('eq-margen').value)  || 0;
   const actual   = parseInputVal('eq-ventas-act');
-  const gastoIns = parseInputVal('eq-gasto-insumos');
-  saveEqMes(actual, gastoIns);
+  const gastoIns = totalFacturas();
+  saveEqMesData({ ventasAct: actual });
 
   // Siempre actualiza la tarjeta de gastos
   document.getElementById('eq-gastos').textContent = clp(gastos);
@@ -4048,20 +4095,133 @@ function renderEqProyeccion(actual, ventasMin, margen) {
 /* ── Control del mes: vendido vs gastado vs ganancia ────── */
 const KEY_EQ_MES = 'makyta_eq_mes';
 
-function saveEqMes(ventasAct, gastoInsumos) {
+function loadEqMes() { try { return JSON.parse(localStorage.getItem(KEY_EQ_MES)) || {}; } catch { return {}; } }
+
+function saveEqMesData(patch) {
   // No guardar hasta que initEqMes haya restaurado: los calcEquilibrio del
   // arranque corren con los inputs aún vacíos y pisarían lo almacenado
   if (!window._eqMesReady) return;
-  localStorage.setItem(KEY_EQ_MES, JSON.stringify({
-    cicloKey: getCicloMes().key, ventasAct, gastoInsumos
-  }));
+  localStorage.setItem(KEY_EQ_MES, JSON.stringify({ ...loadEqMes(), ...patch, cicloKey: getCicloMes().key }));
+}
+
+function getFacturas()   { return loadEqMes().facturas || []; }
+function totalFacturas() { return getFacturas().reduce((s, f) => s + (Number(f.monto) || 0), 0); }
+
+/* ── Facturas de insumos: modal CRUD ────────────────────── */
+function openFacturasModal() {
+  resetFacturaForm();
+  renderFacturasList();
+  openModal('facturasModal');
+  setTimeout(() => document.getElementById('factMonto').focus(), 120);
+}
+
+function resetFacturaForm() {
+  document.getElementById('factEditId').value  = '';
+  document.getElementById('factFecha').value   = new Date().toISOString().slice(0, 10);
+  document.getElementById('factMonto').value   = '';
+  document.getElementById('factDetalle').value = '';
+  document.getElementById('factSaveBtn').textContent = '+ Agregar factura';
+  document.getElementById('factCancelBtn').classList.add('hidden');
+}
+
+function saveFactura() {
+  const monto = parseInputVal('factMonto');
+  if (monto <= 0) return showToast('⚠️ Ingresa el monto de la factura', 'error');
+  const fecha    = document.getElementById('factFecha').value || new Date().toISOString().slice(0, 10);
+  const detalle  = document.getElementById('factDetalle').value.trim();
+  const editId   = document.getElementById('factEditId').value;
+  const facturas = getFacturas();
+  if (editId) {
+    const f = facturas.find(x => x.id === editId);
+    if (f) { f.monto = monto; f.fecha = fecha; f.detalle = detalle; }
+  } else {
+    facturas.push({ id: 'fact-' + Date.now(), fecha, detalle, monto });
+  }
+  saveEqMesData({ facturas });
+  resetFacturaForm();
+  renderFacturasList();
+  calcEquilibrio();
+  showToast(editId ? '✅ Factura actualizada' : '✅ Factura agregada');
+}
+
+function editFactura(id) {
+  const f = getFacturas().find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('factEditId').value  = f.id;
+  document.getElementById('factFecha').value   = f.fecha || new Date().toISOString().slice(0, 10);
+  document.getElementById('factMonto').value   = Math.round(f.monto).toLocaleString('es-CL');
+  document.getElementById('factDetalle').value = f.detalle || '';
+  document.getElementById('factSaveBtn').textContent = 'Guardar cambios';
+  document.getElementById('factCancelBtn').classList.remove('hidden');
+  document.getElementById('factMonto').focus();
+}
+
+function deleteFactura(id) {
+  const f = getFacturas().find(x => x.id === id);
+  if (!f) return;
+  confirmDelete('¿Eliminar factura?',
+    `Se eliminará la factura de ${clp(f.monto)}${f.detalle ? ' (' + f.detalle + ')' : ''}.`,
+    () => {
+      saveEqMesData({ facturas: getFacturas().filter(x => x.id !== id) });
+      resetFacturaForm();
+      renderFacturasList();
+      calcEquilibrio();
+      showToast('🗑️ Factura eliminada');
+    });
+}
+
+function renderFacturasList() {
+  const el = document.getElementById('facturasList');
+  if (!el) return;
+  const facturas = [...getFacturas()].sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  if (!facturas.length) {
+    el.innerHTML = '<p class="text-sm text-muted">Aún no registras facturas este mes.</p>';
+    return;
+  }
+  const fmtFecha = s => { const p = (s || '').split('-'); return p.length === 3 ? `${p[2]}-${p[1]}` : '—'; };
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+        <tbody>
+          ${facturas.map(f => `
+            <tr>
+              <td style="white-space:nowrap">${fmtFecha(f.fecha)}</td>
+              <td>${esc(f.detalle || '—')}</td>
+              <td style="text-align:right">${clp(f.monto)}</td>
+              <td style="text-align:right;white-space:nowrap">
+                <button class="btn btn-ghost btn-icon" onclick="editFactura('${f.id}')" aria-label="Editar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn btn-ghost btn-icon" onclick="deleteFactura('${f.id}')" aria-label="Eliminar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="font-weight:700">Total</td>
+            <td style="text-align:right;font-weight:700">${clp(totalFacturas())}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
 }
 
 function renderEqControl(actual, gastoIns, margen, gastos) {
   const el = document.getElementById('eq-control');
   if (!el) return;
+
+  // Total y contador de facturas en la cabecera de la tarjeta
+  const nFact = getFacturas().length;
+  document.getElementById('eq-gasto-total').textContent = clp(gastoIns);
+  document.getElementById('eq-facturas-count').textContent =
+    nFact === 0 ? 'Sin facturas registradas' : nFact === 1 ? '1 factura registrada' : `${nFact} facturas registradas`;
+
   if (actual <= 0 && gastoIns <= 0) {
-    el.innerHTML = '<p class="text-sm text-muted">Ingresa lo que llevas vendido (en Variables) y lo gastado en insumos para comparar.</p>';
+    el.innerHTML = '<p class="text-sm text-muted">Ingresa lo que llevas vendido (en Variables) y registra tus facturas de insumos para comparar.</p>';
     return;
   }
 
@@ -4544,13 +4704,17 @@ function renderConfigStats() {
   renderCatRecetasList();
 })();
 
-/* Restaura ventas/gasto en insumos del mes; limpia si empezó un ciclo nuevo */
+/* Restaura ventas/facturas del mes; limpia si empezó un ciclo nuevo */
 (function initEqMes() {
   let d; try { d = JSON.parse(localStorage.getItem('makyta_eq_mes')); } catch { d = null; }
   if (d && d.cicloKey === getCicloMes().key) {
-    const fill = (id, n) => { if (n > 0) document.getElementById(id).value = Math.round(n).toLocaleString('es-CL'); };
-    fill('eq-ventas-act', d.ventasAct);
-    fill('eq-gasto-insumos', d.gastoInsumos);
+    // Migra el monto único antiguo a una factura
+    if (d.gastoInsumos > 0 && !(d.facturas || []).length) {
+      d.facturas = [{ id: 'fact-' + Date.now(), fecha: new Date().toISOString().slice(0, 10), detalle: 'Monto anterior (sin detalle)', monto: d.gastoInsumos }];
+      delete d.gastoInsumos;
+      localStorage.setItem('makyta_eq_mes', JSON.stringify(d));
+    }
+    if (d.ventasAct > 0) document.getElementById('eq-ventas-act').value = Math.round(d.ventasAct).toLocaleString('es-CL');
   } else if (d) {
     localStorage.removeItem('makyta_eq_mes');
   }
