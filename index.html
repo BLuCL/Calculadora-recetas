@@ -1572,6 +1572,19 @@ body {
 
     </div>
 
+    <!-- Control del mes: vendido vs gastado vs ganancia -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-header"><span class="card-title">Control del mes: vendido vs gastado</span></div>
+      <div class="card-body">
+        <div class="form-group" style="max-width:300px;margin-bottom:1rem">
+          <label class="form-label">¿Cuánto has gastado en insumos este mes? <em>($)</em></label>
+          <span class="form-hint">Suma de tus compras de ingredientes y envases del mes en curso.</span>
+          <input type="text" inputmode="numeric" class="form-input" id="eq-gasto-insumos" oninput="fmtInput(this);calcEquilibrio()">
+        </div>
+        <div id="eq-control"></div>
+      </div>
+    </div>
+
     <!-- Gráfica del punto de equilibrio -->
     <div class="card" style="margin-bottom:1rem">
       <div class="card-header"><span class="card-title">La gráfica de tu negocio</span></div>
@@ -3796,8 +3809,10 @@ function exportGastos() {
 function calcEquilibrio() {
   const gastos = getTotalGastos();
   const ticket = parseInputVal('eq-ticket');
-  const margen = parseFloat(document.getElementById('eq-margen').value)    || 0;
-  const actual = parseInputVal('eq-ventas-act');
+  const margen   = parseFloat(document.getElementById('eq-margen').value)  || 0;
+  const actual   = parseInputVal('eq-ventas-act');
+  const gastoIns = parseInputVal('eq-gasto-insumos');
+  saveEqMes(actual, gastoIns);
 
   // Siempre actualiza la tarjeta de gastos
   document.getElementById('eq-gastos').textContent = clp(gastos);
@@ -3816,6 +3831,7 @@ function calcEquilibrio() {
     renderScenarios(gastos, ticket, margen);
     renderEqChart(gastos, ticket, margen, actual);
     renderEqProyeccion(0, 0);
+    renderEqControl(actual, gastoIns, margen, gastos);
     return;
   }
 
@@ -3868,6 +3884,7 @@ function calcEquilibrio() {
   renderScenarios(gastos, ticket, margen);
   renderEqChart(gastos, ticket, margen, actual);
   renderEqProyeccion(actual, ventasMin, margen);
+  renderEqControl(actual, gastoIns, margen, gastos);
 }
 
 /* ── Tabla de escenarios ────────────────────────────────── */
@@ -4025,6 +4042,70 @@ function renderEqProyeccion(actual, ventasMin, margen) {
       </div>
     </div>
     <div class="text-sm" style="margin-top:.625rem;color:var(--gray-700)">${mensaje}</div>`;
+}
+
+/* ── Control del mes: vendido vs gastado vs ganancia ────── */
+const KEY_EQ_MES = 'makyta_eq_mes';
+
+function saveEqMes(ventasAct, gastoInsumos) {
+  // No guardar hasta que initEqMes haya restaurado: los calcEquilibrio del
+  // arranque corren con los inputs aún vacíos y pisarían lo almacenado
+  if (!window._eqMesReady) return;
+  localStorage.setItem(KEY_EQ_MES, JSON.stringify({
+    cicloKey: getCicloMes().key, ventasAct, gastoInsumos
+  }));
+}
+
+function renderEqControl(actual, gastoIns, margen, gastos) {
+  const el = document.getElementById('eq-control');
+  if (!el) return;
+  if (actual <= 0 && gastoIns <= 0) {
+    el.innerHTML = '<p class="text-sm text-muted">Ingresa lo que llevas vendido (en Variables) y lo gastado en insumos para comparar.</p>';
+    return;
+  }
+
+  const ciclo       = getCicloMes();
+  // Gastos fijos proporcionales al día del ciclo (arriendo, sueldos, etc. repartidos por día)
+  const gastosFecha = gastos * ciclo.dia / ciclo.diasEnMes;
+  const gastado     = gastoIns + gastosFecha;
+  const ganancia    = actual - gastado;
+
+  let chequeo = '';
+  if (actual > 0 && gastoIns > 0 && margen > 0) {
+    const pctReal = gastoIns / actual * 100;
+    const pctEsp  = 100 - margen;
+    const espIns  = actual * pctEsp / 100;
+    const diff    = gastoIns - espIns;
+    if (Math.abs(pctReal - pctEsp) <= 4) {
+      chequeo = `<div class="hint-box ok mt-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <p>Tu gasto en insumos (<strong>${pctReal.toFixed(0)}%</strong> de las ventas) concuerda con lo que predicen tus recetas (~${pctEsp.toFixed(0)}%). Todo bajo control.</p></div>`;
+    } else if (pctReal > pctEsp) {
+      chequeo = `<div class="hint-box warn mt-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <p>Estás gastando <strong>${pctReal.toFixed(0)}%</strong> de tus ventas en insumos, pero tus recetas predicen ~${pctEsp.toFixed(0)}% (≈${clp(espIns)}). Hay <strong>${clp(diff)}</strong> de diferencia — puede ser merma, alzas de precio no actualizadas en Insumos, o stock comprado por adelantado.</p></div>`;
+    } else {
+      chequeo = `<div class="hint-box info mt-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>Estás gastando <strong>${pctReal.toFixed(0)}%</strong> de tus ventas en insumos, menos que el ~${pctEsp.toFixed(0)}% que predicen tus recetas. Puede ser stock que ya tenías, o que aún no repones — atento a la próxima compra.</p></div>`;
+    }
+  }
+
+  el.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Vendido</div>
+        <div class="stat-value green sm">${clp(actual)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Gastado a la fecha</div>
+        <div class="stat-value red sm">${clp(gastado)}</div>
+        <div class="text-sm text-muted" style="font-size:.6875rem;margin-top:.25rem">Insumos ${clp(gastoIns)} + gastos fijos ${clp(gastosFecha)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">${ganancia >= 0 ? 'Ganancia real a la fecha' : 'Pérdida real a la fecha'}</div>
+        <div class="stat-value ${ganancia >= 0 ? 'green' : 'red'} sm">${ganancia >= 0 ? '+' : '−'}${clp(Math.abs(ganancia))}</div>
+      </div>
+    </div>
+    <p class="text-sm text-muted" style="font-size:.6875rem;margin-top:.5rem">Los gastos fijos se reparten por día: al día ${ciclo.dia} de ${ciclo.diasEnMes} corresponde ${clp(gastosFecha)} de los ${clp(gastos)} del mes.</p>
+    ${chequeo}`;
 }
 
 /* ── Reporte PDF ────────────────────────────────────────── */
@@ -4416,7 +4497,8 @@ function getCicloMes() {
   const dia       = Math.round((hoy0 - start) / MS_DIA) + 1;
   const fmt = d => d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
   const fin = new Date(next.getTime() - MS_DIA);
-  return { inicio, dia, diasEnMes, label: inicio > 1 ? `${fmt(start)} – ${fmt(fin)}` : '' };
+  const key = `${start.getFullYear()}-${start.getMonth() + 1}-${inicio}`;
+  return { inicio, dia, diasEnMes, key, label: inicio > 1 ? `${fmt(start)} – ${fmt(fin)}` : '' };
 }
 
 function saveConfig() {
@@ -4459,6 +4541,20 @@ function renderConfigStats() {
   document.getElementById('cfg-inicio-mes').value = cfg.inicioMes || 1;
   renderConfigStats();
   renderCatRecetasList();
+})();
+
+/* Restaura ventas/gasto en insumos del mes; limpia si empezó un ciclo nuevo */
+(function initEqMes() {
+  let d; try { d = JSON.parse(localStorage.getItem('makyta_eq_mes')); } catch { d = null; }
+  if (d && d.cicloKey === getCicloMes().key) {
+    const fill = (id, n) => { if (n > 0) document.getElementById(id).value = Math.round(n).toLocaleString('es-CL'); };
+    fill('eq-ventas-act', d.ventasAct);
+    fill('eq-gasto-insumos', d.gastoInsumos);
+  } else if (d) {
+    localStorage.removeItem('makyta_eq_mes');
+  }
+  window._eqMesReady = true;
+  if (typeof calcEquilibrio === 'function') calcEquilibrio();
 })();
 
 /* ── 3. Protección URL — re-bloquear al entrar a la sección ── */
