@@ -1131,6 +1131,20 @@ body {
 /* Resaltado de selección acorde al tema */
 ::selection { background: rgba(239,68,68,.35); color: #fff; }
 
+/* ============================================================
+   ORDENAMIENTO DE TABLAS Y TARJETAS
+============================================================ */
+.th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.th-sort:hover { color: var(--gray-900); }
+.sort-arrow { font-size: .625rem; color: var(--red); }
+
+.sort-select {
+  margin-left: auto;
+  font-size: .8125rem;
+  padding: .375rem 1.75rem .375rem .625rem;
+  max-width: 230px;
+}
+
 </style>
 </head>
 <body>
@@ -1286,10 +1300,10 @@ body {
         <table>
           <thead>
             <tr>
-              <th>Insumo</th>
-              <th>Precio compra</th>
-              <th>Cantidad</th>
-              <th>Costo / unidad</th>
+              <th class="th-sort" data-sort-key="nombre" onclick="sortInsumos('nombre')">Insumo <span class="sort-arrow"></span></th>
+              <th class="th-sort" data-sort-key="precio" onclick="sortInsumos('precio')">Precio compra <span class="sort-arrow"></span></th>
+              <th class="th-sort" data-sort-key="cantidad" onclick="sortInsumos('cantidad')">Cantidad <span class="sort-arrow"></span></th>
+              <th class="th-sort" data-sort-key="cu" onclick="sortInsumos('cu')">Costo / unidad <span class="sort-arrow"></span></th>
               <th></th>
             </tr>
           </thead>
@@ -1413,8 +1427,8 @@ body {
           <table>
             <thead>
               <tr>
-                <th>Categoría</th>
-                <th>Monto mensual ($)</th>
+                <th class="th-sort" data-gsort-key="categoria" onclick="sortGastos('categoria')">Categoría <span class="sort-arrow"></span></th>
+                <th class="th-sort" data-gsort-key="monto" onclick="sortGastos('monto')">Monto mensual ($) <span class="sort-arrow"></span></th>
                 <th>Notas</th>
                 <th></th>
               </tr>
@@ -2140,13 +2154,35 @@ function costoUnitario(ins) {
 
 /* ── Render tabla ───────────────────────────────────────── */
 let _insumoQuery = '';
+let _insumoSort  = { key: 'nombre', dir: 1 };
+
+function sortInsumos(key) {
+  if (_insumoSort.key === key) _insumoSort.dir *= -1;
+  else _insumoSort = { key, dir: 1 };
+  renderInsumos();
+}
+
+function updateSortArrows() {
+  document.querySelectorAll('#tab-insumos .th-sort').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    arrow.textContent = th.dataset.sortKey === _insumoSort.key
+      ? (_insumoSort.dir === 1 ? '▲' : '▼') : '';
+  });
+}
 
 function renderInsumos(query) {
   if (query !== undefined) _insumoQuery = query;
   const all = getInsumos() || DEFAULTS_INSUMOS;
   const q   = _insumoQuery.toLowerCase().trim();
   let lista = (q ? all.filter(i => i.nombre.toLowerCase().includes(q)) : all);
-  lista = lista.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const { key, dir } = _insumoSort;
+  lista = lista.slice().sort((a, b) => {
+    if (key === 'nombre') return a.nombre.localeCompare(b.nombre, 'es') * dir;
+    const va = key === 'cu' ? costoUnitario(a) : Number(a[key]) || 0;
+    const vb = key === 'cu' ? costoUnitario(b) : Number(b[key]) || 0;
+    return (va - vb) * dir;
+  });
+  updateSortArrows();
   const tbody = document.getElementById('insumosBody');
 
   if (lista.length === 0) {
@@ -2627,10 +2663,25 @@ function semaforoData(pctCosto) {
 
 /* ── Render cards ───────────────────────────────────────── */
 let _recetaCategoria = '';
+let _recetaSort      = 'nombre';
 
 function renderRecetas() {
   const allRecetas = getRecetas() || DEFAULTS_RECETAS;
-  let all = allRecetas.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  let all = allRecetas.slice();
+
+  if (_recetaSort === 'nombre') {
+    all.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  } else {
+    const costos = new Map(all.map(r => [r.id, calcCostoReceta(r.ingredientes)]));
+    const [key, ord] = _recetaSort.split('-');
+    const valor = r => {
+      if (key === 'precio') return r.precio;
+      if (key === 'costo')  return costos.get(r.id);
+      return r.precio > 0 ? 100 - (costos.get(r.id) / r.precio) * 100 : 0; // margen
+    };
+    all.sort((a, b) => (valor(a) - valor(b)) * (ord === 'desc' ? -1 : 1));
+  }
+
   if (_recetaCategoria) all = all.filter(r => (r.categoria || '') === _recetaCategoria);
   const insumos = getInsumos()  || DEFAULTS_INSUMOS;
   const grid    = document.getElementById('recetasGrid');
@@ -2731,7 +2782,18 @@ function renderRecCatFilter() {
     return `<button class="sub-tab${active}" onclick="_recetaCategoria='${p.value.replace(/'/g,"\\'")}';renderRecetas()">${esc(p.label)}</button>`;
   }).join('') +
     `<button class="sub-tab" onclick="openCatModal()" title="Administrar categorías"
-      style="border-style:dashed;color:var(--gray-500)">✎ Categorías</button>`;
+      style="border-style:dashed;color:var(--gray-500)">✎ Categorías</button>` +
+    `<select class="form-select sort-select" title="Ordenar recetas"
+      onchange="_recetaSort=this.value;renderRecetas()">
+      <option value="nombre">Ordenar: Nombre (A–Z)</option>
+      <option value="precio-desc">Precio: mayor a menor</option>
+      <option value="precio-asc">Precio: menor a mayor</option>
+      <option value="costo-desc">Costo: mayor a menor</option>
+      <option value="costo-asc">Costo: menor a mayor</option>
+      <option value="margen-desc">Margen: mejor a peor</option>
+      <option value="margen-asc">Margen: peor a mejor</option>
+    </select>`;
+  container.querySelector('.sort-select').value = _recetaSort;
 }
 
 /* ── Modal de categorías ────────────────────────────────── */
@@ -3289,9 +3351,29 @@ function getTotalGastos() {
 }
 
 /* ── Render tabla gastos (siempre editable) ─────────────── */
+let _gastoSort = null; // null = orden original hasta que se toque un encabezado
+
+function sortGastos(key) {
+  if (_gastoSort && _gastoSort.key === key) _gastoSort.dir *= -1;
+  else _gastoSort = { key, dir: 1 };
+  renderGastos();
+}
+
 function renderGastos() {
-  const gastos = getGastos() || DEFAULTS_GASTOS;
+  let gastos   = getGastos() || DEFAULTS_GASTOS;
   const total  = gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
+
+  if (_gastoSort) {
+    const { key, dir } = _gastoSort;
+    gastos = gastos.slice().sort((a, b) => key === 'monto'
+      ? ((Number(a.monto) || 0) - (Number(b.monto) || 0)) * dir
+      : String(a.categoria).localeCompare(String(b.categoria), 'es') * dir);
+  }
+  document.querySelectorAll('[data-gsort-key]').forEach(th => {
+    th.querySelector('.sort-arrow').textContent =
+      _gastoSort && th.dataset.gsortKey === _gastoSort.key
+        ? (_gastoSort.dir === 1 ? '▲' : '▼') : '';
+  });
 
   document.getElementById('gastosBody').innerHTML = gastos.map(g => `
     <tr>
@@ -3351,6 +3433,7 @@ function addGastoRow() {
   if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
   gastos.push({ id: uid(), categoria: 'Nuevo gasto', monto: 0, notas: '' });
   setGastos(gastos);
+  _gastoSort = null; // la fila nueva queda al final, visible y con foco
   renderGastos();
   setTimeout(() => {
     const rows = document.querySelectorAll('#gastosBody tr');
