@@ -1134,6 +1134,26 @@ body {
 /* ============================================================
    ORDENAMIENTO DE TABLAS Y TARJETAS
 ============================================================ */
+/* Agarre para arrastrar ingredientes en el modal de receta */
+.ing-drag {
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  cursor: grab;
+  touch-action: none;       /* el dedo arrastra la fila, no la página */
+  font-size: .875rem;
+  padding: .375rem .25rem;
+  border-radius: var(--r-sm);
+  user-select: none;
+}
+.ing-drag:hover  { color: var(--gray-900); background: var(--gray-100); }
+.ing-drag:active { cursor: grabbing; }
+.ing-dragging {
+  opacity: .55;
+  background: var(--gray-100);
+  border-radius: var(--r-sm);
+}
+
 .th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
 .th-sort:hover { color: var(--gray-900); }
 .sort-arrow { font-size: .625rem; color: var(--red); }
@@ -2865,8 +2885,10 @@ function buildIngRow(ing) {
 
   const row = document.createElement('div');
   row.setAttribute('data-ing-row', '');
-  row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 52px auto;gap:.5rem;align-items:center';
+  row.style.cssText = 'display:grid;grid-template-columns:auto 1fr 90px 52px auto;gap:.5rem;align-items:center';
   row.innerHTML = `
+    <button type="button" class="ing-drag" title="Arrastra para reordenar"
+      onpointerdown="dragIngRow(this, event)">⠿</button>
     <select class="form-select" style="font-size:.8125rem"
       onchange="syncIngUnit(this);calcRecetaLive()">
       ${opts}
@@ -2895,6 +2917,36 @@ function syncIngUnit(select) {
 function addIngredienteRow(ing) {
   document.getElementById('ingredienteRows').appendChild(buildIngRow(ing || null));
   calcRecetaLive();
+}
+
+/* ── Reordenar ingredientes arrastrando ─────────────────── */
+/* Usa pointer events (no HTML5 drag&drop) para que también
+   funcione con el dedo en pantallas táctiles. */
+function dragIngRow(handle, ev) {
+  ev.preventDefault();
+  const row       = handle.closest('[data-ing-row]');
+  const container = row.parentElement;
+  row.classList.add('ing-dragging');
+  handle.setPointerCapture(ev.pointerId);
+
+  const move = e => {
+    const y    = e.clientY;
+    const rest = [...container.querySelectorAll('[data-ing-row]:not(.ing-dragging)')];
+    const next = rest.find(s => {
+      const r = s.getBoundingClientRect();
+      return y < r.top + r.height / 2;
+    });
+    if (next !== row.nextElementSibling) container.insertBefore(row, next || null);
+  };
+  const up = () => {
+    row.classList.remove('ing-dragging');
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('pointerup',   up);
+    handle.removeEventListener('pointercancel', up);
+  };
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('pointerup',   up);
+  handle.addEventListener('pointercancel', up);
 }
 
 /* ── Cálculo en vivo (modal) ────────────────────────────── */
