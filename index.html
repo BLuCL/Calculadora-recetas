@@ -1431,6 +1431,7 @@ body {
       <div class="card">
         <div class="card-header">
           <span class="card-title">Gastos fijos mensuales</span>
+          <span class="form-hint" id="uf-badge" style="margin-left:auto;margin-right:.75rem"></span>
           <button class="btn btn-primary btn-sm" onclick="addGastoRow()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Agregar fila
@@ -3444,9 +3445,44 @@ const DEFAULTS_GASTOS = [
   { id:'gas-7', categoria:'Internet y teléfono',        monto:25000,  notas:'' },
 ];
 
+/* ── Valor UF del día (mindicador.cl, con caché local) ──── */
+const KEY_UF      = 'makyta_uf';
+const UF_FALLBACK = 39800; // respaldo si nunca se ha logrado consultar la API
+
+function getUFData() { try { return JSON.parse(localStorage.getItem(KEY_UF)) || null; } catch { return null; } }
+function ufValor()   { const d = getUFData(); return d && d.valor > 0 ? d.valor : UF_FALLBACK; }
+
+/* Monto efectivo en pesos de un gasto: si tiene UF, se convierte al valor del día */
+function montoGasto(g) { return g.uf > 0 ? Math.round(g.uf * ufValor()) : (Number(g.monto) || 0); }
+
+function renderUFBadge() {
+  const el = document.getElementById('uf-badge');
+  if (!el) return;
+  const d = getUFData();
+  if (d) {
+    const [y, m, dd] = String(d.fecha).split('-');
+    el.textContent = `UF hoy: ${clp(d.valor)} · ${dd}-${m}`;
+  } else {
+    el.textContent = `UF de respaldo: ${clp(UF_FALLBACK)} (sin conexión)`;
+  }
+}
+
+async function refreshUF() {
+  try {
+    const r = await fetch('https://mindicador.cl/api/uf');
+    const j = await r.json();
+    const s = j && j.serie && j.serie[0];
+    if (s && s.valor > 0) {
+      localStorage.setItem(KEY_UF, JSON.stringify({ valor: s.valor, fecha: String(s.fecha).slice(0, 10) }));
+      renderGastos(); // re-render con el valor del día (recalcula total y equilibrio)
+    }
+  } catch (e) { /* sin conexión: se usa el último valor guardado */ }
+  renderUFBadge();
+}
+
 /* Expuesto al módulo equilibrio */
 function getTotalGastos() {
-  return (getGastos() || DEFAULTS_GASTOS).reduce((s, g) => s + (Number(g.monto) || 0), 0);
+  return (getGastos() || DEFAULTS_GASTOS).reduce((s, g) => s + montoGasto(g), 0);
 }
 
 /* ── Render tabla gastos (siempre editable) ─────────────── */
@@ -3460,12 +3496,12 @@ function sortGastos(key) {
 
 function renderGastos() {
   let gastos   = getGastos() || DEFAULTS_GASTOS;
-  const total  = gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
+  const total  = gastos.reduce((s, g) => s + montoGasto(g), 0);
 
   if (_gastoSort) {
     const { key, dir } = _gastoSort;
     gastos = gastos.slice().sort((a, b) => key === 'monto'
-      ? ((Number(a.monto) || 0) - (Number(b.monto) || 0)) * dir
+      ? (montoGasto(a) - montoGasto(b)) * dir
       : String(a.categoria).localeCompare(String(b.categoria), 'es') * dir);
   }
   document.querySelectorAll('[data-gsort-key]').forEach(th => {
@@ -3481,10 +3517,21 @@ function renderGastos() {
           onblur="patchGasto('${g.id}','categoria',this.value)">
       </td>
       <td>
-        <input type="text" inputmode="numeric" class="form-input" style="max-width:160px;font-size:.875rem"
-          value="${g.monto ? parseInt(g.monto).toLocaleString('es-CL') : 0}"
-          oninput="fmtInput(this);liveGastosTotal()"
-          onblur="patchGasto('${g.id}','monto',this.value)">
+        <div style="display:flex;align-items:center;gap:.375rem;flex-wrap:wrap">
+          <select class="form-input" data-moneda style="width:auto;font-size:.8125rem;padding:.4rem .5rem"
+            onchange="patchGastoMoneda('${g.id}',this.value)">
+            <option value="clp"${!(g.uf > 0) ? ' selected' : ''}>$</option>
+            <option value="uf"${g.uf > 0 ? ' selected' : ''}>UF</option>
+          </select>
+          ${g.uf > 0
+            ? `<input type="number" step="0.01" min="0" class="form-input" style="max-width:90px;font-size:.875rem"
+                 value="${g.uf}" oninput="liveGastosTotal()" onblur="patchGasto('${g.id}','uf',this.value)">
+               <span class="text-sm text-muted" style="white-space:nowrap" data-uf-clp>= ${clp(montoGasto(g))}</span>`
+            : `<input type="text" inputmode="numeric" class="form-input" style="max-width:120px;font-size:.875rem"
+                 value="${g.monto ? parseInt(g.monto).toLocaleString('es-CL') : 0}"
+                 oninput="fmtInput(this);liveGastosTotal()"
+                 onblur="patchGasto('${g.id}','monto',this.value)">`}
+        </div>
       </td>
       <td>
         <input class="form-input" style="font-size:.8125rem;color:var(--gray-500)"
@@ -3506,8 +3553,19 @@ function renderGastos() {
 /* Suma en vivo mientras se escribe, sin guardar */
 function liveGastosTotal() {
   let total = 0;
-  document.querySelectorAll('#gastosBody input[inputmode="numeric"]')
-    .forEach(inp => total += parseInputVal(inp));
+  document.querySelectorAll('#gastosBody tr').forEach(tr => {
+    const sel = tr.querySelector('select[data-moneda]');
+    if (sel && sel.value === 'uf') {
+      const ufInp = tr.querySelector('input[type="number"]');
+      const clpEq = Math.round((parseFloat(ufInp && ufInp.value) || 0) * ufValor());
+      total += clpEq;
+      const span = tr.querySelector('[data-uf-clp]');
+      if (span) span.textContent = '= ' + clp(clpEq);
+    } else {
+      const inp = tr.querySelector('input[inputmode="numeric"]');
+      if (inp) total += parseInputVal(inp);
+    }
+  });
   document.getElementById('gastosTotal').textContent = clp(total);
   const eq = document.getElementById('eq-gastos');
   if (eq) eq.textContent = clp(total);
@@ -3519,9 +3577,29 @@ function patchGasto(id, field, value) {
   if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
   const g = gastos.find(g => g.id === id);
   if (!g) return;
-  const parsed = field === 'monto' ? (parseInt(String(value).replace(/[^\d]/g, ''), 10) || 0) : value;
+  let parsed = value;
+  if (field === 'monto') parsed = parseInt(String(value).replace(/[^\d]/g, ''), 10) || 0;
+  if (field === 'uf')    parsed = Math.round((parseFloat(String(value).replace(',', '.')) || 0) * 100) / 100;
   if (g[field] === parsed) return;   // sin cambios
   g[field] = parsed;
+  if (field === 'uf') g.monto = Math.round(parsed * ufValor()); // mantiene el equivalente en $ guardado
+  setGastos(gastos);
+  renderGastos();
+  showToast('✅ Guardado');
+}
+
+/* Cambia un gasto entre pesos y UF manteniendo el monto equivalente */
+function patchGastoMoneda(id, moneda) {
+  let gastos = getGastos();
+  if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
+  const g = gastos.find(g => g.id === id);
+  if (!g) return;
+  if (moneda === 'uf') {
+    g.uf = Math.round((Number(g.monto) || 0) / ufValor() * 100) / 100;
+  } else {
+    g.monto = montoGasto(g);
+    delete g.uf;
+  }
   setGastos(gastos);
   renderGastos();
   showToast('✅ Guardado');
@@ -3557,13 +3635,13 @@ function deleteGasto(id) {
 /* ── Stats gastos ───────────────────────────────────────── */
 function updateGastosStats(gastos, total) {
   gastos = gastos || getGastos() || DEFAULTS_GASTOS;
-  total  = total  != null ? total : gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
+  total  = total  != null ? total : gastos.reduce((s, g) => s + montoGasto(g), 0);
 
   document.getElementById('st-total-gastos').textContent = clp(total);
   document.getElementById('st-gasto-diario').textContent = clp(total / 30);
 
   if (gastos.length) {
-    const mayor = gastos.reduce((a, b) => Number(a.monto) >= Number(b.monto) ? a : b);
+    const mayor = gastos.reduce((a, b) => montoGasto(a) >= montoGasto(b) ? a : b);
     document.getElementById('st-mayor-gasto').textContent = mayor.categoria;
   }
 
@@ -3792,7 +3870,7 @@ function exportGastos() {
 
   const gRows = gastos.map(g => `<tr>
     <td>${esc(g.categoria)}</td>
-    <td>${clp(Number(g.monto)||0)}</td>
+    <td>${g.uf > 0 ? `UF ${g.uf} = ` : ''}${clp(montoGasto(g))}</td>
     <td style="color:#6b7280;font-size:.8rem">${esc(g.notas||'')}</td>
   </tr>`).join('');
 
@@ -3844,6 +3922,8 @@ function exportGastos() {
   if (!getGastos()) setGastos(DEFAULTS_GASTOS.map(g => ({ ...g })));
   renderGastos();
   renderPersonal();
+  renderUFBadge();
+  refreshUF(); // consulta el valor UF del día y re-renderiza si cambió
 })();
 
 </script>
