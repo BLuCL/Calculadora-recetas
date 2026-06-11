@@ -1434,7 +1434,7 @@ body {
           <span class="form-hint" id="uf-badge" style="margin-left:auto;margin-right:.75rem"></span>
           <button class="btn btn-primary btn-sm" onclick="addGastoRow()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Agregar fila
+            Agregar gasto
           </button>
         </div>
         <div class="table-wrap">
@@ -3514,7 +3514,7 @@ function renderGastos() {
     <tr>
       <td>
         <input class="form-input" style="font-size:.875rem" value="${esc(g.categoria)}"
-          onblur="patchGasto('${g.id}','categoria',this.value)">
+          placeholder="Nuevo gasto…" onblur="patchGasto('${g.id}','categoria',this.value)">
       </td>
       <td>
         <div style="display:flex;align-items:center;gap:.375rem;flex-wrap:wrap">
@@ -3608,7 +3608,7 @@ function patchGastoMoneda(id, moneda) {
 function addGastoRow() {
   let gastos = getGastos();
   if (!gastos) gastos = DEFAULTS_GASTOS.map(g => ({ ...g }));
-  gastos.push({ id: uid(), categoria: 'Nuevo gasto', monto: 0, notas: '' });
+  gastos.push({ id: uid(), categoria: '', monto: 0, notas: '' });
   setGastos(gastos);
   _gastoSort = null; // la fila nueva queda al final, visible y con foco
   renderGastos();
@@ -3622,7 +3622,7 @@ function deleteGasto(id) {
   const g = (getGastos() || DEFAULTS_GASTOS).find(g => g.id === id);
   if (!g) return;
   confirmDelete(
-    `¿Eliminar "${g.categoria}"?`,
+    `¿Eliminar "${g.categoria || 'gasto sin nombre'}"?`,
     'Se eliminará de tu presupuesto mensual.',
     () => {
       setGastos((getGastos() || []).filter(g => g.id !== id));
