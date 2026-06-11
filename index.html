@@ -1566,9 +1566,16 @@ body {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <p>Ingresa tus datos para ver la proyección del mes.</p>
           </div>
+          <div id="eq-proyeccion"></div>
         </div>
       </div>
 
+    </div>
+
+    <!-- Gráfica del punto de equilibrio -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-header"><span class="card-title">La gráfica de tu negocio</span></div>
+      <div class="card-body" id="eq-chart"></div>
     </div>
 
     <!-- Escenarios -->
@@ -3790,6 +3797,8 @@ function calcEquilibrio() {
     document.getElementById('eq-pct').textContent  = '0%';
     document.getElementById('eq-bar').style.width  = '0%';
     renderScenarios(gastos, ticket, margen);
+    renderEqChart(gastos, ticket, margen, actual);
+    renderEqProyeccion(0, 0);
     return;
   }
 
@@ -3840,6 +3849,8 @@ function calcEquilibrio() {
   p.textContent  = msg;
 
   renderScenarios(gastos, ticket, margen);
+  renderEqChart(gastos, ticket, margen, actual);
+  renderEqProyeccion(actual, ventasMin);
 }
 
 /* ── Tabla de escenarios ────────────────────────────────── */
@@ -3864,6 +3875,133 @@ function renderScenarios(gastos, ticket, margen) {
       <td style="font-weight:700">${rd}</td>
     </tr>`;
   }).join('');
+}
+
+/* ── Formato corto de dinero para ejes ($1,3M / $850K) ──── */
+function fmtShort(n) {
+  if (n >= 1e6) return '$' + (n / 1e6).toLocaleString('es-CL', { maximumFractionDigits: 1 }) + 'M';
+  if (n >= 1e3) return '$' + Math.round(n / 1e3) + 'K';
+  return '$' + Math.round(n);
+}
+
+/* ── Gráfica clásica de punto de equilibrio (SVG) ───────── */
+/* Ingresos vs costos totales según rolls vendidos; el cruce
+   es el equilibrio. Zona roja = pérdida, verde = ganancia.  */
+function renderEqChart(gastos, ticket, margen, actual) {
+  const el = document.getElementById('eq-chart');
+  if (!el) return;
+  if (!gastos || !ticket || !margen) {
+    el.innerHTML = '<p class="text-sm text-muted">Completa las variables (ticket y margen) para ver la gráfica.</p>';
+    return;
+  }
+
+  const m    = margen / 100;
+  const cv   = ticket * (1 - m);          // costo variable por roll
+  const xEq  = gastos / (ticket * m);     // rolls donde ingresos = costos
+  const xAct = actual > 0 ? actual / ticket : 0;
+  const xMax = Math.max(xEq * 1.5, xAct * 1.15);
+  const yMax = ticket * xMax;
+
+  const W = 640, H = 320, L = 64, R = 18, T = 18, B = 42;
+  const sx = x => L + (x / xMax) * (W - L - R);
+  const sy = y => H - B - (y / yMax) * (H - T - B);
+  const yEq = ticket * xEq;
+
+  // Líneas de referencia horizontales (4)
+  let grid = '', labels = '';
+  for (let i = 1; i <= 4; i++) {
+    const y = yMax * i / 4;
+    grid   += `<line x1="${L}" y1="${sy(y)}" x2="${W-R}" y2="${sy(y)}" stroke="var(--gray-200)" stroke-width="1"/>`;
+    labels += `<text x="${L-8}" y="${sy(y)+4}" text-anchor="end" font-size="11" fill="var(--gray-500)">${fmtShort(y)}</text>`;
+  }
+
+  // Marcador "estás aquí" sobre la línea de ingresos
+  const marcaActual = xAct > 0 ? `
+    <line x1="${sx(xAct)}" y1="${sy(0)}" x2="${sx(xAct)}" y2="${sy(actual)}" stroke="var(--blue)" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="${sx(xAct)}" cy="${sy(actual)}" r="5" fill="var(--blue)"/>
+    <text x="${sx(xAct)}" y="${sy(actual)-10}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--blue)">Estás aquí</text>` : '';
+
+  el.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
+      aria-label="Gráfica de punto de equilibrio">
+      ${grid}${labels}
+      <!-- zona de pérdida / ganancia -->
+      <polygon points="${sx(0)},${sy(0)} ${sx(xEq)},${sy(yEq)} ${sx(0)},${sy(gastos)}" fill="rgba(239,68,68,.10)"/>
+      <polygon points="${sx(xEq)},${sy(yEq)} ${sx(xMax)},${sy(ticket*xMax)} ${sx(xMax)},${sy(gastos+cv*xMax)}" fill="rgba(34,197,94,.10)"/>
+      <text x="${sx(xEq*0.30)}" y="${sy(gastos*0.82)}" font-size="11" fill="var(--red)" opacity=".8">PÉRDIDA</text>
+      <text x="${sx(xEq + (xMax-xEq)*0.55)}" y="${sy(ticket*(xEq + (xMax-xEq)*0.62))}" font-size="11" fill="var(--green)" opacity=".9">GANANCIA</text>
+      <!-- ejes -->
+      <line x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(0)}" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <line x1="${L}" y1="${T}" x2="${L}" y2="${sy(0)}" stroke="var(--gray-300)" stroke-width="1.5"/>
+      <!-- gastos fijos -->
+      <line x1="${sx(0)}" y1="${sy(gastos)}" x2="${sx(xMax)}" y2="${sy(gastos)}" stroke="var(--gray-500)" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <!-- costos totales -->
+      <line x1="${sx(0)}" y1="${sy(gastos)}" x2="${sx(xMax)}" y2="${sy(gastos+cv*xMax)}" stroke="var(--yellow)" stroke-width="2.5"/>
+      <!-- ingresos -->
+      <line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(xMax)}" y2="${sy(ticket*xMax)}" stroke="var(--green)" stroke-width="2.5"/>
+      <!-- punto de equilibrio -->
+      <line x1="${sx(xEq)}" y1="${sy(0)}" x2="${sx(xEq)}" y2="${sy(yEq)}" stroke="var(--red)" stroke-width="1" stroke-dasharray="4 3"/>
+      <circle cx="${sx(xEq)}" cy="${sy(yEq)}" r="6" fill="var(--red)" stroke="var(--white)" stroke-width="2"/>
+      <text x="${sx(xEq)}" y="${sy(0)+16}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--red)">${Math.ceil(xEq)} rolls</text>
+      ${marcaActual}
+      <!-- etiquetas de ejes -->
+      <text x="${sx(0)}" y="${sy(0)+16}" text-anchor="middle" font-size="11" fill="var(--gray-500)">0</text>
+      <text x="${sx(xMax)}" y="${sy(0)+16}" text-anchor="middle" font-size="11" fill="var(--gray-500)">${Math.ceil(xMax)}</text>
+      <text x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--gray-400)">Rolls vendidos en el mes</text>
+    </svg>
+    <div style="display:flex;gap:1.25rem;flex-wrap:wrap;margin-top:.625rem;font-size:.75rem;color:var(--gray-600)">
+      <span><span style="display:inline-block;width:18px;height:3px;background:var(--green);border-radius:2px;vertical-align:middle"></span> Ingresos</span>
+      <span><span style="display:inline-block;width:18px;height:3px;background:var(--yellow);border-radius:2px;vertical-align:middle"></span> Costos totales</span>
+      <span><span style="display:inline-block;width:18px;height:3px;background:var(--gray-500);border-radius:2px;vertical-align:middle;border-bottom:1px dashed var(--gray-500)"></span> Gastos fijos</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:var(--red);border-radius:50%;vertical-align:middle"></span> Punto de equilibrio (${Math.ceil(xEq)} rolls · ${clp(yEq)})</span>
+    </div>`;
+}
+
+/* ── Proyección del mes y día de liberación ─────────────── */
+function renderEqProyeccion(actual, ventasMin) {
+  const el = document.getElementById('eq-proyeccion');
+  if (!el) return;
+  if (!ventasMin || actual <= 0) { el.innerHTML = ''; return; }
+
+  const hoy       = new Date();
+  const dia       = hoy.getDate();
+  const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+  const ritmo     = actual / dia;                 // $ por día calendario
+  const proyeccion = ritmo * diasEnMes;
+  const ok        = proyeccion >= ventasMin;
+  const diaLib    = Math.ceil(ventasMin / ritmo); // día en que cubres los gastos
+  const restantes = diasEnMes - dia;
+  const ritmoNec  = restantes > 0 ? (ventasMin - actual) / restantes : 0;
+
+  const pctLib = Math.min(diaLib, diasEnMes) / diasEnMes * 100;
+  const pctHoy = dia / diasEnMes * 100;
+
+  const mensaje = ok
+    ? `🎯 A este ritmo, el <strong>día ${Math.min(diaLib, diasEnMes)}</strong> cubres todos tus gastos — desde ahí, cada venta es ganancia pura.`
+    : (restantes > 0
+        ? `A este ritmo no alcanzas el equilibrio este mes. Necesitas vender en promedio <strong>${clp(ritmoNec)}</strong> diarios los ${restantes} días que quedan.`
+        : `El mes terminó por debajo del punto de equilibrio.`);
+
+  el.innerHTML = `
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap">
+      <span class="text-sm text-muted">Proyección a fin de mes <em>(día ${dia} de ${diasEnMes})</em></span>
+      <span style="font-size:1.25rem;font-weight:700;color:var(--${ok ? 'green' : 'red'})">${clp(proyeccion)}</span>
+    </div>
+    ${dia <= 3 ? '<div class="text-sm text-muted" style="font-size:.75rem">Recién comienza el mes — la proyección se afina con los días.</div>' : ''}
+    <div style="margin-top:.875rem">
+      <div style="position:relative;height:16px;border-radius:999px;overflow:hidden;background:var(--gray-100)">
+        <div style="position:absolute;inset:0 ${100-pctLib}% 0 0;background:rgba(239,68,68,.45)"></div>
+        ${pctLib < 100 ? `<div style="position:absolute;inset:0 0 0 ${pctLib}%;background:rgba(34,197,94,.45)"></div>` : ''}
+        <div style="position:absolute;top:0;bottom:0;left:${pctHoy}%;width:2px;background:var(--gray-900)" title="Hoy"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.6875rem;color:var(--gray-500);margin-top:.25rem">
+        <span>Día 1 — pagando gastos</span>
+        <span>Hoy: día ${dia}</span>
+        <span>Día ${diasEnMes}</span>
+      </div>
+    </div>
+    <div class="text-sm" style="margin-top:.625rem;color:var(--gray-700)">${mensaje}</div>`;
 }
 
 /* ── Reporte PDF ────────────────────────────────────────── */
