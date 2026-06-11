@@ -2498,11 +2498,11 @@ function buildCatSelect(selectedVal) {
   const sel = document.getElementById('recetaCategoria');
   if (!sel) return;
   const cats = syncCatsConRecetas();
-  const val  = selectedVal || cats[0] || '';
-  sel.innerHTML = cats.map(c =>
+  const val  = selectedVal || '';
+  sel.innerHTML = `<option value="">— Sin categoría —</option>` + cats.map(c =>
     `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(c)}</option>`
   ).join('') + `<option value="__nueva__">➕ Nueva categoría…</option>`;
-  sel.value = cats.includes(val) ? val : cats[0];
+  sel.value = cats.includes(val) ? val : '';
 }
 
 function onCatChange(sel) {
@@ -3012,7 +3012,8 @@ function openRecetaModal() {
   document.getElementById('recetaModalTitle').textContent = 'Nueva receta';
   document.getElementById('recetaEditId').value    = '';
   document.getElementById('recetaNombre').value    = '';
-  buildCatSelect('');
+  // Pre-selecciona la categoría del filtro activo ('' en Todos / Sin categoría)
+  buildCatSelect(_recetaCategoria && _recetaCategoria !== '__none__' ? _recetaCategoria : '');
   document.getElementById('recetaPrecio').value    = '';
   document.getElementById('ingredienteRows').innerHTML = '';
   document.getElementById('recetaCostoTotal').textContent = '$0';
