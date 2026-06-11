@@ -3867,7 +3867,7 @@ function calcEquilibrio() {
 
   renderScenarios(gastos, ticket, margen);
   renderEqChart(gastos, ticket, margen, actual);
-  renderEqProyeccion(actual, ventasMin);
+  renderEqProyeccion(actual, ventasMin, margen);
 }
 
 /* ── Tabla de escenarios ────────────────────────────────── */
@@ -3975,7 +3975,7 @@ function renderEqChart(gastos, ticket, margen, actual) {
 }
 
 /* ── Proyección del mes y día de liberación ─────────────── */
-function renderEqProyeccion(actual, ventasMin) {
+function renderEqProyeccion(actual, ventasMin, margen) {
   const el = document.getElementById('eq-proyeccion');
   if (!el) return;
   if (!ventasMin || actual <= 0) { el.innerHTML = ''; return; }
@@ -3986,6 +3986,8 @@ function renderEqProyeccion(actual, ventasMin) {
   const ritmo     = actual / dia;                 // $ por día calendario
   const proyeccion = ritmo * diasEnMes;
   const ok        = proyeccion >= ventasMin;
+  // Ganancia = margen × (ventas − ventasMin): lo que queda tras pagar insumos y gastos fijos
+  const ganancia  = (margen / 100) * (proyeccion - ventasMin);
   const diaLib    = Math.ceil(ventasMin / ritmo); // día en que cubres los gastos
   const restantes = diasEnMes - dia;
   const ritmoNec  = restantes > 0 ? (ventasMin - actual) / restantes : 0;
@@ -4004,6 +4006,10 @@ function renderEqProyeccion(actual, ventasMin) {
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap">
       <span class="text-sm text-muted">Proyección al cierre de tu mes <em>(día ${dia} de ${diasEnMes}${ciclo.label ? ' · ' + ciclo.label : ''})</em></span>
       <span style="font-size:1.25rem;font-weight:700;color:var(--${ok ? 'green' : 'red'})">${clp(proyeccion)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-top:.25rem">
+      <span class="text-sm text-muted">${ganancia >= 0 ? 'Ganancia proyectada del mes' : 'Pérdida proyectada del mes'} <em>≈</em></span>
+      <span style="font-size:1.25rem;font-weight:700;color:var(--${ganancia >= 0 ? 'green' : 'red'})">${ganancia >= 0 ? '+' : '−'}${clp(Math.abs(ganancia))}</span>
     </div>
     ${dia <= 3 ? '<div class="text-sm text-muted" style="font-size:.75rem">Recién comienza el mes — la proyección se afina con los días.</div>' : ''}
     <div style="margin-top:.875rem">
