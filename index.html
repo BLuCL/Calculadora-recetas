@@ -2857,9 +2857,14 @@ function calcRecetaLive() {
 
     if (sem.cls === 'green') {
       hintTx.textContent = `¡Margen excelente! Utilidad bruta de ${clp(precio - costo)} por roll.`;
-    } else {
+    } else if (precioIdeal > precio) {
       hintTx.textContent =
         `Para lograr 30% de costo, tu precio de venta debería ser ${clp(precioIdeal)}.`;
+    } else {
+      // El costo ya está bajo 30%: sugerir subir el precio sería
+      // bajarlo. Solo informar la utilidad actual.
+      hintTx.textContent =
+        `Margen aceptable. Utilidad bruta de ${clp(precio - costo)} por roll.`;
     }
   } else {
     semEl.textContent = '—';
