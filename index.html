@@ -1597,6 +1597,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         Local y horarios
       </button>
+      <button class="config-nav-item" data-cfg="cats" onclick="switchConfigSection('cats')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Categorías de recetas
+      </button>
       <button class="config-nav-item" data-cfg="sync" onclick="switchConfigSection('sync')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
         Google Sheets
@@ -1659,6 +1663,22 @@ body {
     </div>
 
     </div><!-- /cfg-panel-local -->
+
+    <div class="config-panel" id="cfg-panel-cats">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Categorías de recetas</span></div>
+        <div class="card-body">
+          <p class="text-sm text-muted mb-3">Administra las categorías que aparecen al crear o editar una receta y en el filtro de la pestaña Recetas</p>
+          <div id="catRecetasList"></div>
+          <div style="display:flex;gap:.5rem;margin-top:.75rem;align-items:center">
+            <input type="text" class="form-input" id="catNuevaInput"
+              placeholder="Nueva categoría…" style="flex:1"
+              onkeydown="if(event.key==='Enter')agregarCatReceta()">
+            <button class="btn btn-primary btn-sm" onclick="agregarCatReceta()">Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /cfg-panel-cats -->
 
     <div class="config-panel" id="cfg-panel-sync">
       <div class="card">
@@ -1786,28 +1806,6 @@ body {
 <!-- ========================================================
      MODAL: RECETA
 ======================================================== -->
-<!-- Modal: categorías de recetas -->
-<div class="modal-overlay" id="catModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title">Categorías de recetas</h2>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('catModal')" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <p class="text-sm text-muted mb-3">Administra las categorías que aparecen al crear o editar una receta</p>
-      <div id="catRecetasList"></div>
-      <div style="display:flex;gap:.5rem;margin-top:.75rem;align-items:center">
-        <input type="text" class="form-input" id="catNuevaInput"
-          placeholder="Nueva categoría…" style="flex:1"
-          onkeydown="if(event.key==='Enter')agregarCatReceta()">
-        <button class="btn btn-primary btn-sm" onclick="agregarCatReceta()">Agregar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="recetaModal">
   <div class="modal modal-lg">
     <div class="modal-header">
@@ -2476,6 +2474,7 @@ function onCatChange(sel) {
   }
   buildCatSelect(trimmed);
   renderRecCatFilter();
+  renderCatRecetasList();
   showToast(`Categoría "${trimmed}" creada`, 'success');
 }
 
@@ -2682,7 +2681,8 @@ function renderRecetas() {
     all.sort((a, b) => (valor(a) - valor(b)) * (ord === 'desc' ? -1 : 1));
   }
 
-  if (_recetaCategoria) all = all.filter(r => (r.categoria || '') === _recetaCategoria);
+  if (_recetaCategoria === '__none__') all = all.filter(r => !r.categoria);
+  else if (_recetaCategoria) all = all.filter(r => (r.categoria || '') === _recetaCategoria);
   const insumos = getInsumos()  || DEFAULTS_INSUMOS;
   const grid    = document.getElementById('recetasGrid');
 
@@ -2774,15 +2774,16 @@ function renderRecCatFilter() {
   const container = document.getElementById('recetasCatFilter');
   if (!container) return;
   const all  = getRecetas() || DEFAULTS_RECETAS;
-  const cats = [...new Set(all.map(r => r.categoria || 'Sin categoría'))].sort((a, b) => a.localeCompare(b, 'es'));
+  // Todas las categorías administradas, tengan o no recetas aún
+  const cats = syncCatsConRecetas();
 
   const pills = [{ label:'Todos', value:'' }, ...cats.map(c => ({ label:c, value:c }))];
+  if (all.some(r => !r.categoria)) pills.push({ label:'Sin categoría', value:'__none__' });
+
   container.innerHTML = pills.map(p => {
     const active = p.value === _recetaCategoria ? ' active' : '';
     return `<button class="sub-tab${active}" onclick="_recetaCategoria='${p.value.replace(/'/g,"\\'")}';renderRecetas()">${esc(p.label)}</button>`;
   }).join('') +
-    `<button class="sub-tab" onclick="openCatModal()" title="Administrar categorías"
-      style="border-style:dashed;color:var(--gray-500)">✎ Categorías</button>` +
     `<select class="form-select sort-select" title="Ordenar recetas"
       onchange="_recetaSort=this.value;renderRecetas()">
       <option value="nombre">Ordenar: Nombre (A–Z)</option>
@@ -2794,13 +2795,6 @@ function renderRecCatFilter() {
       <option value="margen-asc">Margen: peor a mejor</option>
     </select>`;
   container.querySelector('.sort-select').value = _recetaSort;
-}
-
-/* ── Modal de categorías ────────────────────────────────── */
-function openCatModal() {
-  renderCatRecetasList();
-  openModal('catModal');
-  setTimeout(() => document.getElementById('catNuevaInput').focus(), 120);
 }
 
 /* ── Stats ──────────────────────────────────────────────── */
