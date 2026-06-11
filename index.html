@@ -163,6 +163,67 @@ body {
 
 .nav-tab.active { color: var(--red); background: var(--red-light); }
 
+/* En anchos intermedios solo iconos, para que el botón
+   Sincronizar nunca quede fuera de la pantalla */
+@media (min-width: 768px) and (max-width: 1149px) {
+  .nav-tab-label { display: none; }
+  .nav-tab { padding: 0.5rem 0.625rem; }
+  .nav-tab svg { width: 17px; height: 17px; }
+}
+
+/* ============================================================
+   CONFIGURACIÓN — PESTAÑAS VERTICALES
+============================================================ */
+.config-layout {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.config-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: sticky;
+  top: calc(var(--nav-h) + 1rem);
+}
+
+.config-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  text-align: left;
+  transition: color .15s, background .15s;
+  font-family: var(--font);
+  white-space: nowrap;
+}
+
+.config-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.config-nav-item:hover  { color: var(--gray-900); background: var(--gray-100); }
+.config-nav-item.active { color: var(--red); background: var(--red-light); }
+
+.config-panel { display: none; }
+.config-panel.active { display: block; }
+
+@media (max-width: 767px) {
+  .config-layout { grid-template-columns: 1fr; gap: 0.875rem; }
+  .config-nav {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+}
+
 /* ============================================================
    SYNC BUTTON
 ============================================================ */
@@ -1114,26 +1175,26 @@ body {
     <button class="nav-tab active" data-tab="insumos" onclick="switchTab('insumos')">
       <!-- clipboard icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Insumos
+      <span class="nav-tab-label">Insumos</span>
     </button>
     <button class="nav-tab" data-tab="recetas" onclick="switchTab('recetas')">
       <!-- chef hat icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 0111.18 0A4 4 0 0118 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
-      Recetas
+      <span class="nav-tab-label">Recetas</span>
     </button>
     <button class="nav-tab" data-tab="gastos" onclick="switchTab('gastos')">
       <!-- building icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-      Gastos y Personal
+      <span class="nav-tab-label">Gastos y Personal</span>
     </button>
     <button class="nav-tab" data-tab="equilibrio" onclick="switchTab('equilibrio')">
       <!-- activity icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Punto de Equilibrio
+      <span class="nav-tab-label">Punto de Equilibrio</span>
     </button>
     <button class="nav-tab" data-tab="config" onclick="switchTab('config')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      Configuración
+      <span class="nav-tab-label">Configuración</span>
     </button>
   </nav>
 
@@ -1493,9 +1554,25 @@ body {
     <div class="page-header">
       <div>
         <h1 class="page-title">Configuración</h1>
-        <p class="page-subtitle">Horario y días de operación del local</p>
+        <p class="page-subtitle">Ajustes del local y sincronización</p>
       </div>
     </div>
+
+    <div class="config-layout">
+
+    <nav class="config-nav" aria-label="Secciones de configuración">
+      <button class="config-nav-item active" data-cfg="local" onclick="switchConfigSection('local')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        Local y horarios
+      </button>
+      <button class="config-nav-item" data-cfg="sync" onclick="switchConfigSection('sync')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        Google Sheets
+      </button>
+    </nav>
+
+    <div>
+    <div class="config-panel active" id="cfg-panel-local">
 
     <div class="stats-row">
       <div class="stat-card">
@@ -1548,6 +1625,43 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <p>Los días operativos se usan en el <strong>Punto de Equilibrio</strong> para calcular cuánto necesitas vender por día hábil — no por día del mes.</p>
     </div>
+
+    </div><!-- /cfg-panel-local -->
+
+    <div class="config-panel" id="cfg-panel-sync">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Sincronización con Google Sheets</span></div>
+        <div class="card-body">
+          <div class="hint-box info" style="margin-bottom:1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;margin-top:.125rem"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Necesitas desplegar el archivo <strong>Code.gs</strong> como Apps Script.
+            Sigue las instrucciones dentro del archivo para obtener la URL.</p>
+          </div>
+          <div class="form-group" style="margin-bottom:.75rem">
+            <label class="form-label">URL del Apps Script <em>(termina en /exec)</em></label>
+            <div style="display:flex;gap:.5rem;align-items:flex-start">
+              <input type="url" class="form-input" id="settingsUrl" readonly
+                style="background:var(--gray-50);cursor:default;flex:1"
+                placeholder="https://script.google.com/macros/s/…/exec">
+              <button id="urlLockBtn" type="button" class="btn btn-secondary btn-sm"
+                style="flex-shrink:0;white-space:nowrap" onclick="unlockUrlField()">
+                🔒 Modificar
+              </button>
+            </div>
+            <span class="form-hint">Protegida contra cambios accidentales.</span>
+          </div>
+          <div id="settingsSyncInfo"
+            style="font-size:.8125rem;color:var(--gray-500);padding:.5rem 0"></div>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.75rem">
+            <button class="btn btn-secondary" onclick="disconnectSheets()">Desconectar</button>
+            <button class="btn btn-primary"   onclick="saveAndSync()">Guardar y sincronizar</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /cfg-panel-sync -->
+
+    </div><!-- /columna de paneles -->
+    </div><!-- /config-layout -->
 
   </section>
 
@@ -3712,86 +3826,27 @@ function exportEquilibrio() {
 let SHEETS_URL = localStorage.getItem('makyta_sheets_url') ||
   'https://script.google.com/macros/s/AKfycbwQq2nCJasLqu3PH9DwZ1QXBM1jUalO6hJpYkdTFgVEkFzH57D8BEcxOIodt8TmAnxRgw/exec';
 
-/* ── Inyectar modal de configuración en el DOM ──────────── */
-(function injectSettingsUI() {
-  // Botón ⚙ junto al sync
-  const syncBtn = document.getElementById('syncBtn');
-  const gear    = document.createElement('button');
-  gear.className   = 'btn btn-ghost btn-icon';
-  gear.title       = 'Configurar sincronización';
-  gear.style.marginLeft = '.25rem';
-  gear.innerHTML   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-    style="width:16px;height:16px">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83
-      0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4
-      0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0
-      01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0
-      010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0
-      012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0
-      014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0
-      012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0
-      010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-  </svg>`;
-  gear.onclick = () => openSettingsModal();
-  syncBtn.insertAdjacentElement('afterend', gear);
+/* ── Pestañas verticales de Configuración ───────────────── */
+function switchConfigSection(name) {
+  document.querySelectorAll('.config-nav-item').forEach(b =>
+    b.classList.toggle('active', b.dataset.cfg === name));
+  document.querySelectorAll('.config-panel').forEach(p =>
+    p.classList.toggle('active', p.id === 'cfg-panel-' + name));
+}
 
-  // Modal de configuración
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id        = 'settingsModal';
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('settingsModal'); });
-  overlay.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title">Configurar Google Sheets</h2>
-        <button class="btn btn-ghost btn-icon" onclick="closeModal('settingsModal')" aria-label="Cerrar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            style="width:16px;height:16px">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="hint-box info" style="margin-bottom:1rem">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            style="width:16px;height:16px;flex-shrink:0;margin-top:.125rem">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <p>Necesitas desplegar el archivo <strong>Code.gs</strong> como Apps Script.
-          Sigue las instrucciones dentro del archivo para obtener la URL.</p>
-        </div>
-        <div class="form-group" style="margin-bottom:.75rem">
-          <label class="form-label">URL del Apps Script <em>(termina en /exec)</em></label>
-          <div style="display:flex;gap:.5rem;align-items:flex-start">
-            <input type="url" class="form-input" id="settingsUrl" readonly
-              style="background:var(--gray-50);cursor:default;flex:1"
-              placeholder="https://script.google.com/macros/s/…/exec">
-            <button id="urlLockBtn" type="button" class="btn btn-secondary btn-sm"
-              style="flex-shrink:0;white-space:nowrap" onclick="unlockUrlField()">
-              🔒 Modificar
-            </button>
-          </div>
-          <span class="form-hint">Protegida contra cambios accidentales.</span>
-        </div>
-        <div id="settingsSyncInfo"
-          style="font-size:.8125rem;color:var(--gray-500);padding:.5rem 0"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="disconnectSheets()">Desconectar</button>
-        <button class="btn btn-primary"   onclick="saveAndSync()">Guardar y sincronizar</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
+/* ── Estado inicial del panel Google Sheets ─────────────── */
+(function initSettingsUI() {
+  document.getElementById('settingsUrl').value = SHEETS_URL;
+  refreshSyncInfo();
 })();
 
-/* ── Abrir modal con estado actual ──────────────────────── */
+/* La sección de sincronización vive ahora en Configuración;
+   esta función lleva ahí (la usa syncData si no hay URL). */
 function openSettingsModal() {
   document.getElementById('settingsUrl').value = SHEETS_URL;
   refreshSyncInfo();
-  openModal('settingsModal');
+  switchTab('config');
+  switchConfigSection('sync');
 }
 
 function refreshSyncInfo() {
@@ -3816,7 +3871,7 @@ function saveAndSync() {
     return showToast('⚠️ La URL debe ser de script.google.com', 'error');
   SHEETS_URL = url;
   localStorage.setItem('makyta_sheets_url', url);
-  closeModal('settingsModal');
+  relockUrlField();
   syncData();
 }
 
@@ -3829,7 +3884,9 @@ function disconnectSheets() {
   ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal']
     .forEach(k => localStorage.removeItem(k + '_ts'));
   setSyncState('offline');
-  closeModal('settingsModal');
+  document.getElementById('settingsUrl').value = '';
+  refreshSyncInfo();
+  relockUrlField();
   showToast('Desconectado de Google Sheets', 'info');
 }
 
@@ -4070,10 +4127,8 @@ function renderConfigStats() {
   renderCatRecetasList();
 })();
 
-/* ── 3. Protección URL — re-bloquear al abrir el modal ──── */
-const _origOpenSettings = openSettingsModal;
-openSettingsModal = function() {
-  _origOpenSettings();
+/* ── 3. Protección URL — re-bloquear al entrar a la sección ── */
+function relockUrlField() {
   const input  = document.getElementById('settingsUrl');
   const lockBtn = document.getElementById('urlLockBtn');
   if (input) {
@@ -4082,6 +4137,12 @@ openSettingsModal = function() {
     input.style.cursor     = 'default';
   }
   if (lockBtn) lockBtn.style.display = '';
+}
+
+const _origSwitchConfigSection = switchConfigSection;
+switchConfigSection = function(name) {
+  _origSwitchConfigSection(name);
+  if (name === 'sync') relockUrlField();
 };
 
 function unlockUrlField() {
