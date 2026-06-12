@@ -2963,10 +2963,13 @@ function buildIngRow(ing) {
       <button type="button" class="ing-move" title="Subir" onclick="moverIngRow(this,-1)">▲</button>
       <button type="button" class="ing-move" title="Bajar" onclick="moverIngRow(this,1)">▼</button>
     </div>
-    <select class="form-select" style="font-size:.8125rem"
-      onchange="syncIngUnit(this);calcRecetaLive()">
-      ${opts}
-    </select>
+    <div style="min-width:0">
+      <select class="form-select" style="font-size:.8125rem"
+        onchange="syncIngUnit(this);calcRecetaLive()">
+        ${opts}
+      </select>
+      <div data-ing-costo style="font-size:.6875rem;color:var(--gray-500);margin-top:2px;min-height:14px;padding-left:2px"></div>
+    </div>
     <input type="number" class="form-input" style="font-size:.8125rem"
       placeholder="Cant." min="0" step="any"
       value="${ing ? ing.cantidad : ''}"
@@ -3009,16 +3012,34 @@ function calcRecetaLive() {
   const rows    = document.querySelectorAll('#ingredienteRows [data-ing-row]');
 
   let costo = 0;
+  const porFila = [];
   rows.forEach(row => {
     const id  = row.querySelector('select').value;
     const qty = parseFloat(row.querySelector('input').value) || 0;
-    if (qty <= 0) return;
-    if (id.startsWith('r:')) {
-      costo += calcCostoReceta([{ recetaId: id.slice(2), cantidad: qty }]);
-      return;
+    let c = 0;
+    if (qty > 0) {
+      if (id.startsWith('r:')) {
+        c = calcCostoReceta([{ recetaId: id.slice(2), cantidad: qty }]);
+      } else {
+        const ins = insumos.find(i => i.id === id);
+        if (ins) c = costoUnitario(ins) * qty;
+      }
     }
-    const ins = insumos.find(i => i.id === id);
-    if (ins) costo += costoUnitario(ins) * qty;
+    costo += c;
+    porFila.push({ row, c });
+  });
+
+  // Detalle de costo por ingrediente (el más caro se destaca)
+  const maxC = Math.max(0, ...porFila.map(f => f.c));
+  porFila.forEach(({ row, c }) => {
+    const el = row.querySelector('[data-ing-costo]');
+    if (!el) return;
+    if (c <= 0) { el.textContent = ''; return; }
+    const pct = costo > 0 ? ` · ${Math.round((c / costo) * 100)}% del costo` : '';
+    el.textContent = `${clp(c)}${pct}`;
+    const esMasCaro = c === maxC && porFila.filter(f => f.c > 0).length > 1;
+    el.style.color      = esMasCaro ? 'var(--yellow)' : 'var(--gray-500)';
+    el.style.fontWeight = esMasCaro ? '600' : '400';
   });
 
   document.getElementById('recetaCostoTotal').textContent = clp(costo);
