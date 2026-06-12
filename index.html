@@ -2963,13 +2963,10 @@ function buildIngRow(ing) {
       <button type="button" class="ing-move" title="Subir" onclick="moverIngRow(this,-1)">▲</button>
       <button type="button" class="ing-move" title="Bajar" onclick="moverIngRow(this,1)">▼</button>
     </div>
-    <div style="min-width:0">
-      <select class="form-select" style="font-size:.8125rem"
-        onchange="syncIngUnit(this);calcRecetaLive()">
-        ${opts}
-      </select>
-      <div data-ing-costo style="font-size:.6875rem;color:var(--gray-500);margin-top:2px;min-height:14px;padding-left:2px"></div>
-    </div>
+    <select class="form-select" style="font-size:.8125rem"
+      onchange="syncIngUnit(this);calcRecetaLive()">
+      ${opts}
+    </select>
     <input type="number" class="form-input" style="font-size:.8125rem"
       placeholder="Cant." min="0" step="any"
       value="${ing ? ing.cantidad : ''}"
@@ -2980,7 +2977,8 @@ function buildIngRow(ing) {
     <button type="button" class="btn btn-ghost btn-icon danger"
       onclick="this.closest('[data-ing-row]').remove();calcRecetaLive()" title="Quitar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>`;
+    </button>
+    <div data-ing-costo style="display:none;grid-column:2/-1;font-size:.6875rem;color:var(--gray-500);margin-top:-4px;padding-left:2px"></div>`;
   return row;
 }
 
@@ -3034,9 +3032,10 @@ function calcRecetaLive() {
   porFila.forEach(({ row, c }) => {
     const el = row.querySelector('[data-ing-costo]');
     if (!el) return;
-    if (c <= 0) { el.textContent = ''; return; }
+    if (c <= 0) { el.textContent = ''; el.style.display = 'none'; return; }
     const pct = costo > 0 ? ` · ${Math.round((c / costo) * 100)}% del costo` : '';
     el.textContent = `${clp(c)}${pct}`;
+    el.style.display = '';
     const esMasCaro = c === maxC && porFila.filter(f => f.c > 0).length > 1;
     el.style.color      = esMasCaro ? 'var(--yellow)' : 'var(--gray-500)';
     el.style.fontWeight = esMasCaro ? '600' : '400';
