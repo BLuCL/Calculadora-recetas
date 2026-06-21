@@ -1181,18 +1181,21 @@ body {
     <input
       type="password"
       id="pinInput"
-      inputmode="numeric"
-      maxlength="4"
-      placeholder="••••"
+      placeholder="Contraseña"
       autocomplete="off"
-      oninput="checkPin(this)"
+      onkeydown="if(event.key==='Enter')checkPin()"
       style="width:100%;padding:.75rem;border:2px solid #2a3040;border-radius:10px;
-        font-size:1.75rem;text-align:center;letter-spacing:.75rem;outline:none;
+        font-size:1.25rem;text-align:center;letter-spacing:.25rem;outline:none;
         background:#0f1219;color:#f2f4f8;
-        transition:border-color .15s,background .15s;font-family:monospace"
+        transition:border-color .15s,background .15s"
       onfocus="this.style.borderColor='#ef4444'"
       onblur="this.style.borderColor='#2a3040'"
     >
+    <button onclick="checkPin()"
+      style="margin-top:.75rem;width:100%;padding:.65rem;border:none;border-radius:10px;
+        background:#ef4444;color:#fff;font-size:1rem;font-weight:600;cursor:pointer">
+      Ingresar
+    </button>
     <div id="pinError" style="min-height:1.25rem;margin-top:.625rem;
       font-size:.8125rem;color:#dc2626;font-weight:500"></div>
   </div>
@@ -4703,12 +4706,18 @@ async function loadFromSheets() {
 <script>
 
 /* ── 1. Contraseña ──────────────────────────────────────── */
-function checkPin(input) {
-  if (input.value.length < 4) return;
+async function checkPin() {
+  const input  = document.getElementById('pinInput');
+  const errEl  = document.getElementById('pinError');
+  const val    = input.value;
+  if (!val) return;
 
-  if (input.value === '1206') {
-    input.style.borderColor   = '#22c55e';
-    input.style.background    = 'rgba(34,197,94,.12)';
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+
+  if (hash === '__PIN_HASH__') {
+    input.style.borderColor = '#22c55e';
+    input.style.background  = 'rgba(34,197,94,.12)';
     sessionStorage.setItem('makyta_auth', '1');
     setTimeout(() => {
       const ls = document.getElementById('lockScreen');
@@ -4718,15 +4727,14 @@ function checkPin(input) {
       setTimeout(() => ls.remove(), 320);
     }, 250);
   } else {
-    const errEl = document.getElementById('pinError');
     input.style.borderColor = '#dc2626';
     input.style.animation   = 'pinShake .4s ease';
     errEl.textContent       = 'Contraseña incorrecta';
     setTimeout(() => {
-      input.value           = '';
-      input.style.animation = '';
+      input.value             = '';
+      input.style.animation   = '';
       input.style.borderColor = '#2a3040';
-      errEl.textContent     = '';
+      errEl.textContent       = '';
       input.focus();
     }, 1000);
   }
