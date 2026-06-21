@@ -1875,6 +1875,13 @@ body {
         <div class="form-group">
           <label class="form-label">Categoría</label>
           <select class="form-input" id="recetaCategoria" onchange="onCatChange(this)"></select>
+          <div id="nuevaCatForm" class="hidden" style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center">
+            <input type="text" class="form-input" id="nuevaCatInput" placeholder="Nombre de la categoría…"
+              style="flex:1"
+              onkeydown="if(event.key==='Enter')confirmarNuevaCat();if(event.key==='Escape')cancelarNuevaCat()">
+            <button type="button" class="btn btn-primary btn-sm" onclick="confirmarNuevaCat()">OK</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelarNuevaCat()">✕</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Precio de venta <em>($)</em></label>
@@ -2041,6 +2048,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'config') renderCatRecetasList();
 }
 
 /* ── Sub-tab (Gastos / Personal) ────────────────────────── */
@@ -2144,7 +2152,6 @@ function exportRecetas()    { showToast('⏳ Disponible en la Parte 5', 'info');
 function exportRecetasCSV() { showToast('⏳ Disponible en la Parte 5', 'info'); }
 function importInsumos()    {}
 function importRecetas()    {}
-function renderRecCatFilter(){}
 function exportGastos()     { showToast('⏳ Disponible en la Parte 5', 'info'); }
 function exportEquilibrio() { showToast('⏳ Disponible en la Parte 5', 'info'); }
 
@@ -2543,8 +2550,14 @@ function syncCatsConRecetas() {
 }
 
 function buildCatSelect(selectedVal) {
-  const sel = document.getElementById('recetaCategoria');
+  const sel  = document.getElementById('recetaCategoria');
   if (!sel) return;
+  const form = document.getElementById('nuevaCatForm');
+  if (form) {
+    form.classList.add('hidden');
+    const inp = document.getElementById('nuevaCatInput');
+    if (inp) inp.value = '';
+  }
   const cats = syncCatsConRecetas();
   const val  = selectedVal || '';
   sel.innerHTML = `<option value="">— Sin categoría —</option>` + cats.map(c =>
@@ -2555,19 +2568,38 @@ function buildCatSelect(selectedVal) {
 
 function onCatChange(sel) {
   if (sel.value !== '__nueva__') return;
-  const nombre = prompt('Nombre de la nueva categoría:');
-  if (!nombre || !nombre.trim()) { sel.value = (getCatRecetas() || DEFAULT_CATS_RECETAS)[0]; return; }
-  const trimmed = nombre.trim();
+  const form = document.getElementById('nuevaCatForm');
+  if (form) {
+    form.classList.remove('hidden');
+    setTimeout(() => document.getElementById('nuevaCatInput').focus(), 50);
+  }
+}
+
+function confirmarNuevaCat() {
+  const input   = document.getElementById('nuevaCatInput');
+  const nombre  = input.value.trim();
+  if (!nombre) return showToast('⚠️ Escribe el nombre de la categoría', 'error');
   const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
-  if (!cats.includes(trimmed)) {
-    cats.push(trimmed);
+  if (!cats.includes(nombre)) {
+    cats.push(nombre);
     cats.sort((a, b) => a.localeCompare(b, 'es'));
     setCatRecetas(cats);
   }
-  buildCatSelect(trimmed);
+  buildCatSelect(nombre);
   renderRecCatFilter();
   renderCatRecetasList();
-  showToast(`Categoría "${trimmed}" creada`, 'success');
+  showToast(`Categoría "${nombre}" creada`, 'success');
+}
+
+function cancelarNuevaCat() {
+  const cats = getCatRecetas() || DEFAULT_CATS_RECETAS;
+  const sel  = document.getElementById('recetaCategoria');
+  if (sel) sel.value = cats[0] || '';
+  const form = document.getElementById('nuevaCatForm');
+  if (form) {
+    form.classList.add('hidden');
+    document.getElementById('nuevaCatInput').value = '';
+  }
 }
 
 /* ── Gestión de categorías (panel Config) ───────────────── */
@@ -3116,6 +3148,7 @@ function saveReceta() {
   const editId    = document.getElementById('recetaEditId').value;
 
   if (!nombre)        return showToast('⚠️ Ingresa el nombre del roll', 'error');
+  if (categoria === '__nueva__')  return showToast('⚠️ Confirma o cancela la nueva categoría primero', 'error');
   if (precio <= 0)    return showToast('⚠️ Precio de venta inválido', 'error');
 
   const rows = document.querySelectorAll('#ingredienteRows [data-ing-row]');
