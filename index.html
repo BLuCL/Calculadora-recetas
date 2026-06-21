@@ -3149,7 +3149,7 @@ function saveReceta() {
 
   if (!nombre)        return showToast('⚠️ Ingresa el nombre del roll', 'error');
   if (categoria === '__nueva__')  return showToast('⚠️ Confirma o cancela la nueva categoría primero', 'error');
-  if (precio <= 0)    return showToast('⚠️ Precio de venta inválido', 'error');
+  if (precio < 0)     return showToast('⚠️ Precio de venta inválido', 'error');
 
   const rows = document.querySelectorAll('#ingredienteRows [data-ing-row]');
   const ingredientes = [];
