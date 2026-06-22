@@ -4715,7 +4715,7 @@ async function checkPin() {
   const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
   const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 
-  if (hash === '__PIN_HASH__') {
+  if (hash === 'f714c900b52f1409511d01b6b6f6545f3124c9de9148a41a7e8108c67e96f141') {
     input.style.borderColor = '#22c55e';
     input.style.background  = 'rgba(34,197,94,.12)';
     sessionStorage.setItem('makyta_auth', '1');
