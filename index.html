@@ -2524,8 +2524,7 @@ function setRecetas(data) {
 }
 
 /* ── Categorías de recetas ──────────────────────────────── */
-const KEY_CAT_RECETAS      = 'makyta_cat_recetas';
-const DEFAULT_CATS_RECETAS = ['Rolls', 'Entradas', 'Bebidas', 'Postres', 'Otros'];
+const KEY_CAT_RECETAS = 'makyta_cat_recetas';
 
 function getCatRecetas() {
   try { return JSON.parse(localStorage.getItem(KEY_CAT_RECETAS)) || null; }
@@ -2537,12 +2536,12 @@ function setCatRecetas(cats) {
 }
 
 /* Completa la lista guardada con categorías que existen solo dentro
-   de recetas (creadas antes del administrador de categorías). */
+   de recetas guardadas por el usuario (no usa categorías de ejemplo). */
 function syncCatsConRecetas() {
   const guardadas = getCatRecetas();
-  const cats = guardadas ? [...guardadas] : [...DEFAULT_CATS_RECETAS];
+  const cats = guardadas ? [...guardadas] : [];
   let changed = !guardadas;
-  (getRecetas() || DEFAULTS_RECETAS).forEach(r => {
+  (getRecetas() || []).forEach(r => {
     if (r.categoria && !cats.includes(r.categoria)) { cats.push(r.categoria); changed = true; }
   });
   if (changed) {
@@ -2582,7 +2581,7 @@ function confirmarNuevaCat() {
   const input   = document.getElementById('nuevaCatInput');
   const nombre  = input.value.trim();
   if (!nombre) return showToast('⚠️ Escribe el nombre de la categoría', 'error');
-  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const cats = getCatRecetas() || [];
   if (!cats.includes(nombre)) {
     cats.push(nombre);
     cats.sort((a, b) => a.localeCompare(b, 'es'));
@@ -2595,7 +2594,7 @@ function confirmarNuevaCat() {
 }
 
 function cancelarNuevaCat() {
-  const cats = getCatRecetas() || DEFAULT_CATS_RECETAS;
+  const cats = getCatRecetas() || [];
   const sel  = document.getElementById('recetaCategoria');
   if (sel) sel.value = cats[0] || '';
   const form = document.getElementById('nuevaCatForm');
@@ -2644,7 +2643,7 @@ function iniciarEditCat(idx) {
 }
 
 function cancelarEditCat(idx) {
-  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const cats = getCatRecetas() || [];
   document.getElementById(`cat-input-${idx}`).value = cats[idx] || '';
   document.getElementById(`cat-label-${idx}`).classList.remove('hidden');
   document.getElementById(`cat-input-${idx}`).classList.add('hidden');
@@ -2655,7 +2654,7 @@ function cancelarEditCat(idx) {
 function guardarEditCat(idx) {
   const nuevoNombre = document.getElementById(`cat-input-${idx}`).value.trim();
   if (!nuevoNombre) return showToast('⚠️ El nombre no puede estar vacío', 'error');
-  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const cats = getCatRecetas() || [];
   const nombreViejo = cats[idx];
   if (nuevoNombre === nombreViejo) { cancelarEditCat(idx); return; }
   if (cats.includes(nuevoNombre)) return showToast('⚠️ Ya existe esa categoría', 'error');
@@ -2676,7 +2675,7 @@ function agregarCatReceta() {
   const input = document.getElementById('catNuevaInput');
   const nombre = input.value.trim();
   if (!nombre) return showToast('⚠️ Escribe el nombre de la categoría', 'error');
-  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const cats = getCatRecetas() || [];
   if (cats.includes(nombre)) return showToast('⚠️ Ya existe esa categoría', 'error');
   cats.push(nombre);
   cats.sort((a, b) => a.localeCompare(b, 'es'));
@@ -2688,7 +2687,7 @@ function agregarCatReceta() {
 }
 
 function borrarCatReceta(idx) {
-  const cats = getCatRecetas() || [...DEFAULT_CATS_RECETAS];
+  const cats = getCatRecetas() || [];
   const nombre = cats[idx];
   const recetas = getRecetas() || [];
   const enUso = recetas.filter(r => r.categoria === nombre).length;
