@@ -4571,7 +4571,7 @@ function disconnectSheets() {
   SHEETS_URL = '';
   localStorage.removeItem('makyta_sheets_url');
   localStorage.removeItem('makyta_last_sync');
-  ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal']
+  ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal','makyta_cat_recetas']
     .forEach(k => localStorage.removeItem(k + '_ts'));
   setSyncState('offline');
   document.getElementById('settingsUrl').value = '';
@@ -4604,11 +4604,12 @@ async function syncData() {
   setSyncState('syncing');
   try {
     const payload = {
-      action:          'saveAll',
-      makyta_insumos:  getInsumos()  || DEFAULTS_INSUMOS,
-      makyta_recetas:  getRecetas()  || DEFAULTS_RECETAS,
-      makyta_gastos:   getGastos()   || DEFAULTS_GASTOS,
-      makyta_personal: getPersonal() || [],
+      action:              'saveAll',
+      makyta_insumos:      getInsumos()    || DEFAULTS_INSUMOS,
+      makyta_recetas:      getRecetas()    || DEFAULTS_RECETAS,
+      makyta_gastos:       getGastos()     || DEFAULTS_GASTOS,
+      makyta_personal:     getPersonal()   || [],
+      makyta_cat_recetas:  getCatRecetas() || [],
     };
 
     const res  = await fetch(SHEETS_URL, {
@@ -4647,8 +4648,11 @@ async function loadFromSheets() {
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
 
-    const keys    = ['makyta_insumos','makyta_recetas','makyta_gastos','makyta_personal'];
-    let   updated = false;
+    const keys = [
+      'makyta_insumos', 'makyta_recetas', 'makyta_gastos',
+      'makyta_personal', 'makyta_cat_recetas',
+    ];
+    let updated = false;
 
     keys.forEach(key => {
       const remote = json.data?.[key];
@@ -4670,6 +4674,8 @@ async function loadFromSheets() {
       renderGastos();
       renderPersonal();
       calcEquilibrio();
+      renderCatRecetasList();
+      renderRecCatFilter();
       showToast('✅ Datos actualizados desde Google Sheets');
     }
 
