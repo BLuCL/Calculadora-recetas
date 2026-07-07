@@ -1342,7 +1342,7 @@ body {
         <p class="page-subtitle">Costo y rentabilidad de cada roll</p>
       </div>
       <div class="page-actions">
-        <button class="btn btn-secondary btn-sm" onclick="exportRecetasCSV()">
+        <button class="btn btn-secondary btn-sm" onclick="openExportModal('csv')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar CSV
         </button>
@@ -1351,11 +1351,11 @@ body {
           Importar CSV
         </button>
         <input type="file" id="importRecetaFile" accept=".csv" style="display:none" onchange="importRecetas(this)">
-        <button class="btn btn-secondary btn-sm" onclick="exportRecetas()">
+        <button class="btn btn-secondary btn-sm" onclick="openExportModal('pdf')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Reporte PDF
         </button>
-        <button class="btn btn-secondary btn-sm" onclick="exportRecetario()">
+        <button class="btn btn-secondary btn-sm" onclick="openExportModal('recetario')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           Recetario
         </button>
@@ -2016,6 +2016,37 @@ body {
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('facturasModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================================
+     MODAL: SELECCIONAR CATEGORÍAS PARA EXPORTAR
+======================================================== -->
+<div class="modal-overlay" id="exportCatModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h2 class="modal-title">Exportar recetas</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('exportCatModal')" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.875rem;color:var(--gray-500);margin-bottom:.875rem">
+        Selecciona las categorías que quieres incluir en la exportación:
+      </p>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;font-weight:600;
+                    padding:.5rem 0;border-bottom:1px solid var(--gray-200);margin-bottom:.375rem;cursor:pointer">
+        <input type="checkbox" id="exportCatAll" onchange="toggleAllExportCats(this.checked)"
+               style="width:1rem;height:1rem;cursor:pointer">
+        Todas las categorías
+      </label>
+      <div id="exportCatList" style="max-height:260px;overflow-y:auto;padding-right:.25rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('exportCatModal')">Cancelar</button>
+      <button class="btn btn-primary" id="exportCatConfirmBtn" onclick="confirmarExport()">Exportar</button>
     </div>
   </div>
 </div>
@@ -3241,11 +3272,76 @@ function deleteReceta(id) {
   );
 }
 
+/* ── Modal de selección de categorías para exportar ─────── */
+let _exportType = 'pdf';
+
+function openExportModal(type) {
+  _exportType = type;
+  const cats = getCatRecetas() || [];
+  const list = document.getElementById('exportCatList');
+  const allChk = document.getElementById('exportCatAll');
+  const btn = document.getElementById('exportCatConfirmBtn');
+
+  const labels = { csv: 'Exportar CSV', pdf: 'Reporte PDF', recetario: 'Exportar Recetario' };
+  btn.textContent = labels[type] || 'Exportar';
+
+  // Build checkboxes (one per category + "Sin categoría" if needed)
+  const recetas = getRecetas() || [];
+  const usedCats = [...new Set(recetas.map(r => r.categoria || ''))];
+  const allCats = [...new Set([...cats, ...usedCats])].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
+  const hasSinCat = recetas.some(r => !r.categoria);
+
+  list.innerHTML = allCats.map(cat =>
+    `<label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;
+                   padding:.35rem 0;cursor:pointer;border-bottom:1px solid var(--gray-100)">
+       <input type="checkbox" class="export-cat-chk" value="${esc(cat)}" checked
+              onchange="updateExportAllChk()" style="width:1rem;height:1rem;cursor:pointer">
+       ${esc(cat)}
+     </label>`
+  ).join('') + (hasSinCat
+    ? `<label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;
+                     padding:.35rem 0;cursor:pointer;color:var(--gray-400);font-style:italic">
+         <input type="checkbox" class="export-cat-chk" value="" checked
+                onchange="updateExportAllChk()" style="width:1rem;height:1rem;cursor:pointer">
+         Sin categoría
+       </label>`
+    : '');
+
+  allChk.checked = true;
+  allChk.indeterminate = false;
+  openModal('exportCatModal');
+}
+
+function toggleAllExportCats(checked) {
+  document.querySelectorAll('.export-cat-chk').forEach(c => { c.checked = checked; });
+}
+
+function updateExportAllChk() {
+  const all = document.querySelectorAll('.export-cat-chk');
+  const checked = [...all].filter(c => c.checked).length;
+  const allChk = document.getElementById('exportCatAll');
+  allChk.checked = checked === all.length;
+  allChk.indeterminate = checked > 0 && checked < all.length;
+}
+
+function confirmarExport() {
+  const checked = [...document.querySelectorAll('.export-cat-chk')].filter(c => c.checked);
+  const all = [...document.querySelectorAll('.export-cat-chk')];
+  const catFilter = checked.length === all.length ? null : checked.map(c => c.value);
+  closeModal('exportCatModal');
+  if (_exportType === 'csv')       exportRecetasCSV(catFilter);
+  else if (_exportType === 'pdf')  exportRecetas(catFilter);
+  else                             exportRecetario(catFilter);
+}
+
 /* ── Reporte PDF (ventana de impresión) ─────────────────── */
-function exportRecetas() {
-  const all     = getRecetas()  || DEFAULTS_RECETAS;
+function exportRecetas(catFilter) {
+  let all       = getRecetas()  || DEFAULTS_RECETAS;
+  if (catFilter) all = all.filter(r => catFilter.includes(r.categoria || ''));
   const insumos = getInsumos()  || DEFAULTS_INSUMOS;
   const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
+
+  if (!all.length) return showToast('⚠️ No hay recetas en las categorías seleccionadas', 'error');
 
   const tbody = all.map(rec => {
     const costo  = calcCostoReceta(rec.ingredientes);
@@ -3296,11 +3392,12 @@ function exportRecetas() {
 /* ── Recetario para cocina (ventana de impresión) ───────── */
 /* Sin precios ni costos: es para pegarlo en el local. Solo
    nombre, categoría y cantidades de cada ingrediente. */
-function exportRecetario() {
-  const all     = (getRecetas() || DEFAULTS_RECETAS)
-    .slice().sort((a, b) =>
-      (a.categoria || 'zzz').localeCompare(b.categoria || 'zzz', 'es') ||
-      a.nombre.localeCompare(b.nombre, 'es'));
+function exportRecetario(catFilter) {
+  let all       = (getRecetas() || DEFAULTS_RECETAS).slice();
+  if (catFilter) all = all.filter(r => catFilter.includes(r.categoria || ''));
+  all.sort((a, b) =>
+    (a.categoria || 'zzz').localeCompare(b.categoria || 'zzz', 'es') ||
+    a.nombre.localeCompare(b.nombre, 'es'));
   const insumos = getInsumos() || DEFAULTS_INSUMOS;
   const fecha   = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' });
 
@@ -3371,8 +3468,9 @@ function exportRecetario() {
 }
 
 /* ── Exportar CSV recetas ───────────────────────────────── */
-function exportRecetasCSV() {
-  const all     = getRecetas() || DEFAULTS_RECETAS;
+function exportRecetasCSV(catFilter) {
+  let all       = getRecetas() || DEFAULTS_RECETAS;
+  if (catFilter) all = all.filter(r => catFilter.includes(r.categoria || ''));
   const insumos = getInsumos() || DEFAULTS_INSUMOS;
   const header  = ['Roll','Categoria','Precio venta ($)','Ingrediente','Cantidad','Unidad'];
   const rows    = [];
